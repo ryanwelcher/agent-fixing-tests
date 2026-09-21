@@ -1,0 +1,5 @@
+.wpem-list .wpem-event { border-bottom: 1px solid #eee; padding: 12px 0; }
+.wpem-event h3 { margin: 0 0 4px; }
+.wpem-event img { max-width: 100%; height: auto; }
+.wpem-attendees { list-style: none; padding: 0; }
+.wpem-message { color: #2a7; }
