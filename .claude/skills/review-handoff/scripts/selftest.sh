@@ -15,7 +15,18 @@
 # Every arm scores against ground-truth/issues.mjs and appends to results/runs.jsonl.
 set -euo pipefail
 
-HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Bash reads a script incrementally as it executes it. Editing this file during
+# a run makes the running shell resume at its saved byte offset inside the NEW
+# content, which silently re-executes fragments of other branches. A full matrix
+# takes over an hour, so that window is real. Re-exec from a snapshot instead.
+if [ -z "${SELFTEST_REEXEC:-}" ]; then
+  SNAP="$( mktemp "${TMPDIR:-/tmp}/selftest-XXXXXX" )"
+  cat "${BASH_SOURCE[0]}" > "$SNAP"
+  SELFTEST_REEXEC="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" \
+    exec bash "$SNAP" "$@"
+fi
+
+HERE="$SELFTEST_REEXEC"
 ROOT="$( cd "$HERE/../../../.." && pwd )"
 H="$ROOT/harness"
 

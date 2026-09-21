@@ -1,6 +1,6 @@
 # Two-model review handoff: results
 
-_Generated 2026-09-21 16:29 from 3 run(s) in `results/runs.jsonl` (1 superseded row(s) ignored)._
+_Generated 2026-09-21 19:28 from 7 run(s) in `results/runs.jsonl` (4 superseded row(s) ignored)._
 
 Fixture: `wp-event-manager`, a WordPress plugin with 76 deliberately seeded defects
 (22 critical, 32 high, 13 medium, 9 low). 75 are checked by deterministic regex detectors;
@@ -17,6 +17,10 @@ the defect is actually gone. Quote the verified number.
 | `handoff` | haiku | haiku | 35/75 | 31/75 | 41% | $0.709 | 3,130,483 | 12m03s | $0.023 | intact | pass |
 | `handoff` | opus | sonnet | 64/75 | 56/75 | 75% | $2.942 | 1,000,229 | 17m53s | $0.053 | intact | pass |
 | `handoff` | opus | haiku | 62/75 | 58/75 | 77% | $2.750 | 4,123,535 | 21m37s | $0.047 | intact | pass |
+| `handoff-review` | opus | sonnet | 58/75 | 52/75 | 69% | $2.899 | 1,015,464 | 19m29s | $0.056 | intact | pass |
+| `handoff-review` | opus | haiku | 63/75 | 60/75 | 80% | $3.230 | 3,616,472 | 20m04s | $0.054 | intact | pass |
+| `oneshot` | opus | opus | 69/75 | 67/75 | 89% | $2.885 | 1,490,744 | 16m25s | $0.043 | intact | pass |
+| `skill` | opus | sonnet | 62/75 | 57/75 | 76% | $4.243 | 1,077,360 | 21m29s | $0.074 | intact | pass |
 
 ## Fix quality
 
@@ -27,6 +31,10 @@ Of the fixes the detectors passed, how many survive reading the code.
 | `handoff` | haiku | 31 | 4 | 0 | 0 | 11 | 11% |
 | `handoff` | sonnet | 56 | 5 | 3 | 0 | 8 | 13% |
 | `handoff` | haiku | 58 | 3 | 1 | 0 | 12 | 6% |
+| `handoff-review` | sonnet | 52 | 5 | 1 | 0 | 8 | 10% |
+| `handoff-review` | haiku | 60 | 2 | 1 | 0 | 7 | 5% |
+| `oneshot` | opus | 67 | 2 | 0 | 0 | 5 | 3% |
+| `skill` | sonnet | 57 | 3 | 2 | 0 | 6 | 8% |
 
 ### Regressions the fix introduced
 
@@ -61,14 +69,44 @@ Of the fixes the detectors passed, how many survive reading the code.
 - `handoff` — **low** `plugin/wp-event-manager.php:57` — '$wpdb->query( "INSERT INTO {$new_table} SELECT * FROM wpem_rsvps" );' - return value unchecked and wpem_migrated_to_prefix is set regardless, so a failed migration (e.g. rows longer than the new VARCHAR(191) under strict mode) is recorded as done and never retried; the old table is also left behind.
 - `handoff` — **low** `plugin/includes/class-event-cron.php:17` — Same paging-while-mutating bug as uninstall: events are trashed inside a loop paging over 'post_status' => 'publish', so each run skips up to 50 expired events per page boundary (self-heals over later hourly runs).
 - `handoff` — **low** `plugin/includes/class-event-admin.php:112` — export() now requires check_admin_referer( 'wpem_export' ), but nothing in the plugin renders an export link carrying that nonce, so the CSV export is unreachable from the UI.
+- `handoff-review` — **medium** `plugin/templates/event-single.php:1` — The whole templates/ directory was deleted rather than fixed ('Only in .../plugin: templates' in fix.diff) - it held the single-event template with the RSVP form markup (.wpem-rsvp-form, #wpem-name, #wpem-email, .wpem-message) that public/js/frontend.js and public/css/style.css still target, plus the attendee list; no claim covers that file, and a theme that included it now includes a missing file.
+- `handoff-review` — **low** `plugin/includes/functions.php:41` — 'return home_url( add_query_arg( array(), $wp->request ) );' - $wp->request is null in wp-admin (parse_request never runs), so the only caller, admin/settings-page.php:45 'Current page:', now prints the site home URL instead of the current admin URL and passes null into add_query_arg(), which trips PHP 8.1+ deprecation notices.
+- `handoff-review` — **medium** `plugin/includes/class-event-cron.php:58` — 'wp_delete_post( $event->ID, false );' trashes the event as recoverable, but lines 54-56 have already permanently deleted its RSVP rows - restoring a trashed event now brings back an event whose attendee list is irrecoverably gone, and readme.txt advertises this as 'expired events go to the trash'.
+- `handoff-review` — **low** `plugin/uninstall.php:25` — "'post_status' => 'any'" excludes trashed posts, so the events the new cron trashes (class-event-cron.php:58) are left behind in the database after uninstall - the old force-delete cron plus force-delete uninstall left nothing.
+- `handoff-review` — **low** `plugin/uninstall.php:22` — 'do { ... } while ( $query->posts );' re-runs the same query until it returns nothing; if any returned post fails to delete (e.g. a plugin short-circuits pre_delete_post), the same 200 ids come back forever and uninstall hangs until the PHP timeout. The previous code queried once.
+- `handoff-review` — **low** `plugin/includes/class-event-cpt.php:26` — "'show_in_rest' => true" was added to register_post_type, which switches the Event editor from classic to the block editor and exposes /wp/v2/event - a user-visible change no claim asked for (meta box saving still works via the block editor's compat form).
+- `handoff-review` — **low** `plugin/admin/js/admin.js:22` — The newly added search handler binds to '#wpem-search' and writes to '#wpem-results', but nothing in the plugin renders those elements (admin/settings-page.php has no search field) and the previous front-end consumer was deleted - the wpem_search endpoint is now unreachable from any shipped UI.
+- `handoff-review` — **low** `plugin/includes/class-event-rest.php:50` — GET /wpem/v1/events now returns 20 events by default instead of every event; existing API consumers that relied on the unpaginated response silently get a truncated list (no total/pagination headers are sent).
+- `handoff-review` — **medium** `includes/class-event-ajax.php:65` — Nonce action mismatch breaks the search endpoint: the handler calls check_ajax_referer( 'wpem_admin', 'nonce' ) but the only caller, public/js/frontend.js:28, sends 'nonce: wpemFront.nonce' created with wp_create_nonce( 'wpem_frontend' ), so every request dies with -1 even for an administrator.
+- `handoff-review` — **low** `includes/class-event-admin.php:102` — export() now requires check_admin_referer( 'wpem_export' ) but no screen renders a wpem_export link or nonce anywhere in the plugin, so CSV export is unreachable for legitimate admins.
+- `handoff-review` — **low** `uninstall.php:17` — The new 'do { ... } while ( ! empty( $posts ) );' batch loop never breaks on failure - if wp_delete_post( $post_id, true ) is blocked (e.g. a before_delete_post hook) get_posts keeps returning the same 200 ids and uninstall spins until the PHP timeout.
+- `handoff-review` — **low** `wp-event-manager.php:53` — 'PRIMARY KEY (id),' uses a single space; dbDelta requires two spaces after PRIMARY KEY, so on re-activation dbDelta emits a redundant ADD PRIMARY KEY and a 'Multiple primary key defined' DB error.
+- `handoff-review` — **low** `includes/class-event-cron.php:16` — 'posts_per_page' => 100 caps the hourly cleanup at 100 events per run with no repeat scheduling, so a site with a large backlog of past events now clears it far more slowly than the previous -1 sweep.
+- `handoff-review` — **low** `includes/functions.php:41` — home_url( add_query_arg( array() ) ) concatenates the full REQUEST_URI onto the home URL, so on a subdirectory install it returns https://example.com/blog/blog/page - wrong URL (currently harmless: the function has no callers left).
+- `handoff-review` — **low** `includes/class-event-rest.php:98` — The /settings route declares no args schema, so an array-valued custom_css reaches wp_strip_all_tags( $request['custom_css'] ) and throws a TypeError from strip_tags() on PHP 8 (admin-only 500).
+- `oneshot` — **low** `plugin/public/js/frontend.js:18` — The error branch "} else if ( response && response.data && response.data.message ) {" is unreachable: wp_send_json_error( ..., 400 ) sets an HTTP 400/403/500 status, so jQuery routes the response to its fail handler and never calls this success callback - a visitor who submits a bad name/email gets silence instead of the message the code intends to show.
+- `oneshot` — **low** `plugin/includes/class-event-admin.php:51` — "wp_strip_all_tags( $submitted['custom_css'] )" (and sanitize_email on line 50) is called on a value only known to be an element of an array - posting wpem_settings[custom_css][]=x raises a PHP 8 TypeError and fatals the settings save; previously the array was stored without error. Needs an authenticated admin plus a valid nonce, so it is self-inflicted only.
+- `oneshot` — **low** `plugin/templates/event-single.php:30` — "echo wp_kses_post( apply_filters( 'the_content', $wpem_event->post_content ) );" runs kses over already-filtered output, so oEmbed/iframe embeds (not in $allowedposttags) are stripped from event bodies that rendered fine before - a visible content change on pages with embedded video or maps.
+- `oneshot` — **low** `plugin/includes/functions.php:56` — "return home_url( add_query_arg( array() ) );" doubles the subdirectory segment on subdirectory installs, because home_url() already contains the path that REQUEST_URI repeats. No impact today - the settings-page call site was deleted in the same change, leaving the helper unused - but the helper is wrong for the next caller.
+- `oneshot` — **low** `plugin/uninstall.php:22` — The "do { ... } while ( count( $wpem_post_ids ) === 200 );" batch loop relies on wp_delete_post() actually removing each post to make progress; if a deletion is blocked (e.g. a plugin short-circuits pre_delete_post) the same 200 ids are fetched forever and uninstall hangs. Also, post_status 'any' excludes trashed events, so they are left behind.
+- `skill` — **medium** `plugin/includes/class-event-shortcode.php:74` — echo '<style>' . esc_html( wp_strip_all_tags( $css ) ) . '</style>'; - CSS does not decode HTML entities, so any custom CSS using a child combinator or quotes now renders as '.a &gt; .b { content: &quot;x&quot;; }' and silently stops applying.
+- `skill` — **medium** `plugin/includes/class-event-cron.php:40` — cleanup() dropped the 'foreach ( $rsvps as $rsvp ) { WPEM_DB::delete_rsvp( $rsvp->id ); }' loop, so RSVP rows (names and emails) are never removed when an event is cleaned up - orphaned PII now accumulates in wpem_rsvps forever.
+- `skill` — **low** `plugin/includes/class-event-cron.php:40` — wp_delete_post( $event->ID, true ) became 'wp_trash_post( $event_id );' - past events now pile up in the Trash instead of disappearing, a visible change for anyone relying on the old behaviour.
+- `skill` — **low** `plugin/includes/class-event-cron.php:22` — 'posts_per_page' => 100 caps cleanup at 100 events per hourly run with no ordering or offset, so a site with a large backlog of past events drains it only 100 per hour.
+- `skill` — **low** `plugin/wp-event-manager.php:61` — 'PRIMARY KEY (id),' is passed to dbDelta() with a single space; dbDelta's documented parser needs two, so re-running activation can emit a duplicate ADD PRIMARY KEY and a MySQL error on upgrade.
+- `skill` — **low** `plugin/templates` — fix.diff line 1022 'Only in .../plugin: templates' - the entire templates/ directory was deleted; no claim covers it and nothing in the fixed tree references it, so it is silent scope creep rather than a crash.
 
 ## Fix rate by severity
 
 | Arm | Run | Critical | High | Medium | Low |
 | --- | --- | --- | --- | --- | --- |
-| `handoff` | smoke-handoff | 15/22 | 15/32 | 2/12 | 3/9 |
-| `handoff` | matrix-handoff-sonnet | 20/22 | 27/32 | 9/12 | 8/9 |
+| `handoff` | smoke-handoff | 15/21 | 15/32 | 2/13 | 3/9 |
+| `handoff` | matrix-handoff-sonnet | 19/21 | 27/32 | 10/13 | 8/9 |
 | `handoff` | matrix-handoff-haiku | 18/21 | 28/32 | 8/13 | 8/9 |
+| `handoff-review` | matrix-handoff-review-sonnet | 18/21 | 27/32 | 8/13 | 5/9 |
+| `handoff-review` | matrix-handoff-review-haiku | 19/21 | 27/32 | 9/13 | 8/9 |
+| `oneshot` | matrix-oneshot-opus | 20/21 | 31/32 | 10/13 | 8/9 |
+| `skill` | matrix-skill | 19/21 | 28/32 | 8/13 | 7/9 |
 
 ## Fix rate by category
 
@@ -77,6 +115,10 @@ Of the fixes the detectors passed, how many survive reading the code.
 | `handoff` | smoke-handoff | 1/3 | 5/11 | 1/1 | 0/4 | 27/44 | 1/12 |
 | `handoff` | matrix-handoff-sonnet | 3/3 | 8/11 | 1/1 | 4/4 | 37/44 | 11/12 |
 | `handoff` | matrix-handoff-haiku | 2/3 | 8/11 | 1/1 | 4/4 | 37/44 | 10/12 |
+| `handoff-review` | matrix-handoff-review-sonnet | 1/3 | 6/11 | 1/1 | 3/4 | 37/44 | 10/12 |
+| `handoff-review` | matrix-handoff-review-haiku | 3/3 | 7/11 | 1/1 | 4/4 | 38/44 | 10/12 |
+| `oneshot` | matrix-oneshot-opus | 3/3 | 8/11 | 1/1 | 4/4 | 42/44 | 11/12 |
+| `skill` | matrix-skill | 2/3 | 8/11 | 1/1 | 4/4 | 39/44 | 8/12 |
 
 ## Review recall vs. fixes landed
 
@@ -87,6 +129,10 @@ The gap between what the reviewer found and what the implementer landed is the c
 | `handoff` | smoke-handoff | ~35/76 (heur.) | - | 35 | 100% |
 | `handoff` | matrix-handoff-sonnet | 64/76 | 2 | 64 | 100% |
 | `handoff` | matrix-handoff-haiku | 67/76 | 0 | 62 | 93% |
+| `handoff-review` | matrix-handoff-review-sonnet | 64/76 | 1 | 58 | 91% |
+| `handoff-review` | matrix-handoff-review-haiku | 66/76 | 0 | 63 | 96% |
+| `oneshot` | matrix-oneshot-opus | 66/76 | 0 | 69 | 105% |
+| `skill` | matrix-skill | 60/76 | 0 | 62 | 103% |
 
 ## Tokens and context, per phase
 
@@ -101,6 +147,16 @@ The gap between what the reviewer found and what the implementer landed is the c
 | `handoff` | review | opus | 11 | 10 | 44,203 | 448,191 | 521,712 | 565,915 | $2.064 | 83,619 (8%) |
 | `handoff` | fix | haiku | 53 | 52 | 36,883 | 3,441,841 | 3,520,737 | 3,557,620 | $0.686 | 92,167 (46%) |
 | `handoff` | verify | - | 15 | 14 | 33,003 | 964,712 | 1,066,190 | 1,099,193 | $2.322 | 111,568 (11%) |
+| `handoff-review` | review | opus | 9 | 8 | 50,406 | 366,316 | 445,928 | 496,334 | $2.239 | 89,714 (9%) |
+| `handoff-review` | fix | sonnet | 7 | 6 | 26,364 | 414,605 | 492,766 | 519,130 | $0.659 | 88,370 (9%) |
+| `handoff-review` | verify | - | 17 | 16 | 32,620 | 715,484 | 814,281 | 846,901 | $2.161 | 108,893 (11%) |
+| `handoff-review` | review | opus | 14 | 13 | 55,801 | 697,568 | 787,182 | 842,983 | $2.640 | 99,706 (10%) |
+| `handoff-review` | fix | haiku | 45 | 40 | 29,442 | 2,671,762 | 2,744,047 | 2,773,489 | $0.590 | 87,812 (44%) |
+| `handoff-review` | verify | - | 14 | 13 | 25,789 | 786,135 | 877,222 | 903,011 | $1.949 | 101,179 (10%) |
+| `oneshot` | oneshot | opus | 21 | 20 | 54,229 | 1,351,093 | 1,436,515 | 1,490,744 | $2.885 | 95,500 (10%) |
+| `oneshot` | verify | - | 16 | 15 | 33,103 | 667,681 | 776,815 | 809,918 | $2.253 | 119,232 (12%) |
+| `skill` | skill | opus | 23 | 62 | 18,128 | 1,004,578 | 1,059,232 | 1,077,360 | $4.243 | 90,067 (9%) |
+| `skill` | verify | - | 14 | 13 | 27,202 | 802,470 | 893,289 | 920,491 | $1.989 | 100,911 (10%) |
 
 ## Where the handoff leaked
 
@@ -123,6 +179,30 @@ WP-02 BUG-02 SEC-02 SEC-03 SEC-27 SEC-31 BUG-05 SEC-35 SEC-38 JS-04 JS-07
 
 ```
 WP-02 WP-03 BUG-02 SEC-02 SEC-03 SEC-04 SEC-27 BUG-04 BUG-05 SEC-35 SEC-38 SEC-40 A11Y-03
+```
+
+**`handoff-review` / matrix-handoff-review-sonnet** — 17 still open:
+
+```
+WP-02 BUG-02 SEC-02 SEC-03 TZ-01 SEC-27 BUG-05 PERF-04 BUG-07 SEC-35 A11Y-02 SEC-38 SEC-39 SEC-40 A11Y-03 DEF-02 JS-04
+```
+
+**`handoff-review` / matrix-handoff-review-haiku** — 12 still open:
+
+```
+WP-02 WP-03 BUG-02 SEC-02 SEC-03 SEC-27 BUG-04 BUG-05 SEC-35 SEC-38 SEC-39 JS-04
+```
+
+**`oneshot` / matrix-oneshot-opus** — 6 still open:
+
+```
+WP-02 BUG-02 SEC-02 SEC-27 BUG-05 JS-04
+```
+
+**`skill` / matrix-skill** — 13 still open:
+
+```
+WP-02 WP-03 BUG-02 SEC-02 WP-04 SEC-27 BUG-05 SEC-38 SEC-39 SEC-40 A11Y-03 DEF-02 JS-04
 ```
 
 ## Raw data

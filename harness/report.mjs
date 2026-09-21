@@ -22,9 +22,11 @@ if ( ! existsSync( LEDGER ) ) { console.error( 'no results/runs.jsonl yet - run 
 const all = readFileSync( LEDGER, 'utf8' ).split( '\n' ).filter( Boolean ).map( ( l ) => JSON.parse( l ) );
 
 // The ledger is append-only and re-scoring a run (for example re-running
-// verification after the fact) appends a second row. Keep the newest per run.
+// verification after the fact) appends a second row. Keep the newest per
+// run+arm: keying on the run name alone lets a stray run recorded under an
+// existing name silently replace a real result.
 const latest = new Map();
-for ( const r of all ) latest.set( r.run, r );
+for ( const r of all ) latest.set( `${ r.run }::${ r.arm }`, r );
 const rows = [ ...latest.values() ];
 const superseded = all.length - rows.length;
 
