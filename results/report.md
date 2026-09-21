@@ -1,6 +1,6 @@
 # Two-model review handoff: results
 
-_Generated 2026-09-21 16:02 from 2 run(s) in `results/runs.jsonl` (1 superseded row(s) ignored)._
+_Generated 2026-09-21 16:29 from 3 run(s) in `results/runs.jsonl` (1 superseded row(s) ignored)._
 
 Fixture: `wp-event-manager`, a WordPress plugin with 76 deliberately seeded defects
 (22 critical, 32 high, 13 medium, 9 low). 75 are checked by deterministic regex detectors;
@@ -16,6 +16,7 @@ the defect is actually gone. Quote the verified number.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `handoff` | haiku | haiku | 35/75 | 31/75 | 41% | $0.709 | 3,130,483 | 12m03s | $0.023 | intact | pass |
 | `handoff` | opus | sonnet | 64/75 | 56/75 | 75% | $2.942 | 1,000,229 | 17m53s | $0.053 | intact | pass |
+| `handoff` | opus | haiku | 62/75 | 58/75 | 77% | $2.750 | 4,123,535 | 21m37s | $0.047 | intact | pass |
 
 ## Fix quality
 
@@ -25,6 +26,7 @@ Of the fixes the detectors passed, how many survive reading the code.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `handoff` | haiku | 31 | 4 | 0 | 0 | 11 | 11% |
 | `handoff` | sonnet | 56 | 5 | 3 | 0 | 8 | 13% |
+| `handoff` | haiku | 58 | 3 | 1 | 0 | 12 | 6% |
 
 ### Regressions the fix introduced
 
@@ -47,6 +49,18 @@ Of the fixes the detectors passed, how many survive reading the code.
 - `handoff` — **low** `plugin/admin/js/admin.js:22` — The attendee search moved out of frontend.js into admin.js behind the wpem_admin nonce, but the settings page renders no #wpem-search or #wpem-results markup and admin.js only loads on that page - the search feature is now unreachable dead code.
 - `handoff` — **low** `plugin/admin/settings-page.php:51` — '<h2>Integration</h2>' is left with no body after the API-key paragraph was deleted, and wpem_get_ticket_api_key() (functions.php:28) has no callers and no UI to populate wpem_ticket_api_key, so the ticketing integration is unconfigurable.
 - `handoff` — **low** `plugin/includes/class-event-cpt.php:54` — 'update_post_meta( $post_id, '_wpem_price', (float) wp_unslash( $_POST['wpem_price'] ) )' coerces previously free-text prices, so a stored '10.00 USD' becomes 10 and a comma-decimal '10,50' becomes 10 on the next save.
+- `handoff` — **medium** `plugin/includes/class-event-admin.php:115` — get_rsvps() gained a '$limit = 500' default, so 'WPEM_DB::get_rsvps( $event_id )' now silently truncates the CSV export (and REST /attendees, and the single-event attendee list) at 500 rows with no warning or pagination.
+- `handoff` — **medium** `plugin/uninstall.php:15` — The loop force-deletes posts while paging over them ('paged' => $paged with wp_delete_post($id, true)), so the result set shifts under the offset and roughly half the events survive uninstall - events 201-400 are skipped after page 1 deletes 1-200.
+- `handoff` — **medium** `plugin/includes/class-event-cron.php:43` — Cleanup no longer deletes RSVP rows at all (the 'foreach ( $rsvps as $rsvp ) WPEM_DB::delete_rsvp(...)' block was dropped), so attendee rows - including email PII that used to be purged - accumulate forever and are orphaned once the trashed event is emptied.
+- `handoff` — **medium** `plugin/includes/class-event-shortcode.php:79` — "echo '<style id=\"wpem-custom-css\">' . esc_html( wp_strip_all_tags( $css ) ) . '</style>'" - esc_html inside <style> is not decoded by browsers, so any saved CSS using a child selector ('>' becomes '&gt;') or '&' (media queries, nesting) is now broken.
+- `handoff` — **medium** `plugin/public/js/frontend.js:30` — 'resultsEl.innerHTML = '';' - the search box still fires an AJAX request on every keyup but the results are never rendered; the front-end search feature now does nothing.
+- `handoff` — **medium** `plugin/includes/class-event-rest.php:144` — update_settings() reads '$request->get_json_params()', which is null for a form-encoded or query-string POST, so a valid non-JSON request to /wpem/v1/settings saves nothing yet still returns {"saved":true}; it also bypasses the sanitize_callbacks declared in the route args.
+- `handoff` — **low** `plugin/includes/class-event-rest.php:52` — "'validate_callback' => 'is_email'" - REST calls validators as callback($value, $request, $param), and is_email()'s second parameter is $deprecated, so every /rsvp request triggers a _deprecated_argument() notice.
+- `handoff` — **low** `plugin/public/js/frontend.js:25` — The front-end search sends 'wpemData.nonce' (created for the 'wpem_rsvp' action) to wpem_search, which calls check_ajax_referer( 'wpem_admin', 'nonce' ) and also now requires edit_posts - the request can never succeed.
+- `handoff` — **low** `plugin/includes/class-event-admin.php:101` — 'if ( in_array( $value[0], ... ) )' dereferences offset 0 without checking length, raising an 'Uninitialized string offset 0' warning in PHP 8 for any empty name/email/status cell during export.
+- `handoff` — **low** `plugin/wp-event-manager.php:57` — '$wpdb->query( "INSERT INTO {$new_table} SELECT * FROM wpem_rsvps" );' - return value unchecked and wpem_migrated_to_prefix is set regardless, so a failed migration (e.g. rows longer than the new VARCHAR(191) under strict mode) is recorded as done and never retried; the old table is also left behind.
+- `handoff` — **low** `plugin/includes/class-event-cron.php:17` — Same paging-while-mutating bug as uninstall: events are trashed inside a loop paging over 'post_status' => 'publish', so each run skips up to 50 expired events per page boundary (self-heals over later hourly runs).
+- `handoff` — **low** `plugin/includes/class-event-admin.php:112` — export() now requires check_admin_referer( 'wpem_export' ), but nothing in the plugin renders an export link carrying that nonce, so the CSV export is unreachable from the UI.
 
 ## Fix rate by severity
 
@@ -54,6 +68,7 @@ Of the fixes the detectors passed, how many survive reading the code.
 | --- | --- | --- | --- | --- | --- |
 | `handoff` | smoke-handoff | 15/22 | 15/32 | 2/12 | 3/9 |
 | `handoff` | matrix-handoff-sonnet | 20/22 | 27/32 | 9/12 | 8/9 |
+| `handoff` | matrix-handoff-haiku | 18/21 | 28/32 | 8/13 | 8/9 |
 
 ## Fix rate by category
 
@@ -61,6 +76,7 @@ Of the fixes the detectors passed, how many survive reading the code.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `handoff` | smoke-handoff | 1/3 | 5/11 | 1/1 | 0/4 | 27/44 | 1/12 |
 | `handoff` | matrix-handoff-sonnet | 3/3 | 8/11 | 1/1 | 4/4 | 37/44 | 11/12 |
+| `handoff` | matrix-handoff-haiku | 2/3 | 8/11 | 1/1 | 4/4 | 37/44 | 10/12 |
 
 ## Review recall vs. fixes landed
 
@@ -70,6 +86,7 @@ The gap between what the reviewer found and what the implementer landed is the c
 | --- | --- | --- | --- | --- | --- |
 | `handoff` | smoke-handoff | ~35/76 (heur.) | - | 35 | 100% |
 | `handoff` | matrix-handoff-sonnet | 64/76 | 2 | 64 | 100% |
+| `handoff` | matrix-handoff-haiku | 67/76 | 0 | 62 | 93% |
 
 ## Tokens and context, per phase
 
@@ -81,6 +98,9 @@ The gap between what the reviewer found and what the implementer landed is the c
 | `handoff` | review | opus | 11 | 10 | 53,927 | 454,160 | 538,617 | 592,544 | $2.420 | 94,555 (9%) |
 | `handoff` | fix | sonnet | 6 | 5 | 18,524 | 320,850 | 389,161 | 407,685 | $0.523 | 78,522 (8%) |
 | `handoff` | verify | - | 13 | 12 | 27,958 | 703,159 | 796,501 | 824,459 | $1.984 | 103,436 (10%) |
+| `handoff` | review | opus | 11 | 10 | 44,203 | 448,191 | 521,712 | 565,915 | $2.064 | 83,619 (8%) |
+| `handoff` | fix | haiku | 53 | 52 | 36,883 | 3,441,841 | 3,520,737 | 3,557,620 | $0.686 | 92,167 (46%) |
+| `handoff` | verify | - | 15 | 14 | 33,003 | 964,712 | 1,066,190 | 1,099,193 | $2.322 | 111,568 (11%) |
 
 ## Where the handoff leaked
 
@@ -97,6 +117,12 @@ WP-01 WP-02 DEF-01 BUG-01 WP-03 DBG-01 SEC-04 SEC-05 TZ-01 SEC-06 SEC-10 SEC-12 
 
 ```
 WP-02 BUG-02 SEC-02 SEC-03 SEC-27 SEC-31 BUG-05 SEC-35 SEC-38 JS-04 JS-07
+```
+
+**`handoff` / matrix-handoff-haiku** — 13 still open:
+
+```
+WP-02 WP-03 BUG-02 SEC-02 SEC-03 SEC-04 SEC-27 BUG-04 BUG-05 SEC-35 SEC-38 SEC-40 A11Y-03
 ```
 
 ## Raw data
