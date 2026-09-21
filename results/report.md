@@ -1,6 +1,6 @@
 # Two-model review handoff: results
 
-_Generated 2026-09-21 19:28 from 7 run(s) in `results/runs.jsonl` (4 superseded row(s) ignored)._
+_Generated 2026-09-21 20:52 from 10 run(s) in `results/runs.jsonl` (5 superseded row(s) ignored)._
 
 Fixture: `wp-event-manager`, a WordPress plugin with 76 deliberately seeded defects
 (22 critical, 32 high, 13 medium, 9 low). 75 are checked by deterministic regex detectors;
@@ -21,6 +21,9 @@ the defect is actually gone. Quote the verified number.
 | `handoff-review` | opus | haiku | 63/75 | 60/75 | 80% | $3.230 | 3,616,472 | 20m04s | $0.054 | intact | pass |
 | `oneshot` | opus | opus | 69/75 | 67/75 | 89% | $2.885 | 1,490,744 | 16m25s | $0.043 | intact | pass |
 | `skill` | opus | sonnet | 62/75 | 57/75 | 76% | $4.243 | 1,077,360 | 21m29s | $0.074 | intact | pass |
+| `handoff` | opus | opus | 62/75 | 58/75 | 77% | $5.455 | 2,730,639 | 22m47s | $0.094 | intact | pass |
+| `handoff` | opus | sonnet | 9/9 | 9/9 | 100% | $1.887 | 824,047 | 11m11s | $0.210 | - | pass |
+| `oneshot` | opus | opus | 8/9 | 8/9 | 89% | $1.739 | 776,638 | 9m09s | $0.217 | - | pass |
 
 ## Fix quality
 
@@ -35,6 +38,9 @@ Of the fixes the detectors passed, how many survive reading the code.
 | `handoff-review` | haiku | 60 | 2 | 1 | 0 | 7 | 5% |
 | `oneshot` | opus | 67 | 2 | 0 | 0 | 5 | 3% |
 | `skill` | sonnet | 57 | 3 | 2 | 0 | 6 | 8% |
+| `handoff` | opus | 58 | 3 | 1 | 0 | 7 | 6% |
+| `handoff` | sonnet | 9 | 0 | 0 | 0 | 6 | 0% |
+| `oneshot` | opus | 8 | 0 | 0 | 0 | 5 | 0% |
 
 ### Regressions the fix introduced
 
@@ -95,6 +101,24 @@ Of the fixes the detectors passed, how many survive reading the code.
 - `skill` — **low** `plugin/includes/class-event-cron.php:22` — 'posts_per_page' => 100 caps cleanup at 100 events per hourly run with no ordering or offset, so a site with a large backlog of past events drains it only 100 per hour.
 - `skill` — **low** `plugin/wp-event-manager.php:61` — 'PRIMARY KEY (id),' is passed to dbDelta() with a single space; dbDelta's documented parser needs two, so re-running activation can emit a duplicate ADD PRIMARY KEY and a MySQL error on upgrade.
 - `skill` — **low** `plugin/templates` — fix.diff line 1022 'Only in .../plugin: templates' - the entire templates/ directory was deleted; no claim covers it and nothing in the fixed tree references it, so it is silent scope creep rather than a crash.
+- `handoff` — **medium** `includes/class-event-shortcode.php:62` — esc_html( format_event_date( strtotime( (string) $date ) ) ) - WordPress forces PHP's default timezone to UTC, so strtotime() reads the naive '_wpem_date' string as UTC and wp_date() then shifts it into the site timezone; an event saved as 18:00 renders as 14:00 on a UTC-5 site, where the old date() call showed 18:00.
+- `handoff` — **medium** `includes/class-event-admin.php:88` — The date field changed to 'type="datetime-local"', which renders empty for any previously stored value not in YYYY-MM-DDTHH:MM form; re-saving then posts an empty string and class-event-cpt.php:63 stores '' (strtotime false), silently wiping the event date.
+- `handoff` — **medium** `public/js/frontend.js:28` — $.get( wpemAdmin.ajaxUrl, { ... nonce: wpemAdmin.nonce ... } ) sits in the frontend bundle, but only 'wpemFront' is localized for the wpem-frontend handle, so the search handler throws 'ReferenceError: wpemAdmin is not defined' the moment a #wpem-search element exists on the front end.
+- `handoff` — **medium** `templates/event-single.php:18` — wp_kses_post( apply_filters( 'the_content', $event->post_content ) ) runs kses after the filters, stripping markup WordPress itself generated - oEmbed <iframe>s and shortcode-emitted <script>/<iframe> vanish from event content.
+- `handoff` — **low** `includes/class-event-admin.php:43` — sanitize_email( $posted['notify_email'] ) / wp_strip_all_tags( $posted['custom_css'] ) receive whatever shape was posted; an admin submitting wpem_settings[notify_email][]=x passes an array and fatals with a PHP 8 TypeError instead of being rejected.
+- `handoff` — **low** `uninstall.php:31` — 'paged' => $paged with $paged never incremented - the do/while only terminates because the posts are force-deleted, so a single post whose deletion is blocked by a filter makes uninstall spin forever.
+- `handoff` — **low** `templates/event-single.php:26` — Price output changed from 'Price: $<price>' to number_format_i18n( (float) $price, 2 ) with no currency symbol, so '$25' now renders as '25.00'.
+- `handoff` — **medium** `wp-member-directory.php:37` — `if ( get_option( 'mdir_db_version' ) !== MDIR_VERSION )` runs dbDelta from plugins_loaded, so front-end visitors load wp-admin/includes/upgrade.php and race to ALTER the table, and `update_option( 'mdir_db_version', MDIR_VERSION )` records success even when dbDelta's ALTER failed.
+- `handoff` — **medium** `includes/class-mdir-directory.php:32` — The transient key is now `md5()` over the attacker-controlled `$_GET['mdir_q']`, so requests with random search terms create unbounded 15-minute transients (wp_options bloat) where the old code used one fixed key.
+- `handoff` — **medium** `includes/class-mdir-booking.php:47` — With the new `UNIQUE KEY event_user`, a second booking by the same member fails on duplicate key, `$wpdb->query()` returns false, and `if ( 1 !== $inserted )` reports "This event is full." — a wrong message, and on upgraded tables that already contain duplicate rows dbDelta cannot add the index at all, so the guarantee silently does not apply.
+- `handoff` — **low** `includes/class-mdir-db.php:100` — `prune_log()` was deleted rather than fixed, so the 30-day cleanup of the mdir_log table is gone; it had no callers, so nothing fatals, but the housekeeping no longer exists and uninstall.php does not drop that table either.
+- `handoff` — **low** `includes/class-mdir-rest.php:76` — `/mdir/v1/members` is now unreachable for every role including administrators unless a site adds the `mdir_public_directory` filter — there is no capability fallback such as current_user_can( 'mdir_view_private' ).
+- `handoff` — **low** `includes/functions.php:36` — `mdir_member_count()` caches the total for five minutes with no invalidation on user_register/delete_user, so the AJAX and REST headline counts are now stale for up to five minutes after signups.
+- `oneshot` — **medium** `includes/class-mdir-directory.php:66` — New per-search cache key `self::CACHE_KEY . '_' . md5( wp_json_encode( array( $term, $page, $per_page ) ) )` is derived from the unvalidated `$_GET['mdir_q']`, so any anonymous visitor can mint unlimited 15-minute `_transient_mdir_directory_html_*` rows in wp_options by varying the query string - the old code had exactly one key.
+- `oneshot` — **low** `includes/class-mdir-booking.php:25` — Added `|| 'publish' !== get_post_status( $event_id )` - private, scheduled, draft and password-protected mdir_event posts that were previously bookable now hard-fail with wp_die( 'Unknown event.', 400 ), a user-visible behaviour change not covered by any claim.
+- `oneshot` — **low** `includes/class-mdir-db.php:141` — `return (int) $wpdb->query( $wpdb->prepare( $sql, $args ) );` collapses a SQL failure (false) and a legitimate refusal into the same 0, so book_seat() reports 'You already have a seat at this event.' (HTTP 409) when the insert actually errored.
+- `oneshot` — **low** `includes/class-mdir-db.php:118` — Public signature changed to `add_booking( $event_id, $user_id, $capacity = null )` and the return value changed from $wpdb->insert()'s result to a row count; with the default null the new `WHERE NOT EXISTS (...)` duplicate guard still applies, so any existing two-arg caller that relied on inserting a repeat booking now silently gets 0.
+- `oneshot` — **low** `includes/class-mdir-booking.php:57` — New error code `new WP_Error( 'mdir_booked', ... )` - code that branched only on 'mdir_full' will fall through, and the 'This event is full.' message is now also returned whenever mdir_capacity is unset or 0 via the `if ( $capacity < 1 )` short-circuit at line 48 without ever touching the bookings table.
 
 ## Fix rate by severity
 
@@ -107,6 +131,9 @@ Of the fixes the detectors passed, how many survive reading the code.
 | `handoff-review` | matrix-handoff-review-haiku | 19/21 | 27/32 | 9/13 | 8/9 |
 | `oneshot` | matrix-oneshot-opus | 20/21 | 31/32 | 10/13 | 8/9 |
 | `skill` | matrix-skill | 19/21 | 28/32 | 8/13 | 7/9 |
+| `handoff` | matrix-handoff-opus | 19/21 | 28/32 | 8/13 | 7/9 |
+| `handoff` | hard-handoff-sonnet | 3/3 | 5/5 | 1/1 | - |
+| `oneshot` | hard-oneshot-opus | 3/3 | 4/5 | 1/1 | - |
 
 ## Fix rate by category
 
@@ -119,6 +146,9 @@ Of the fixes the detectors passed, how many survive reading the code.
 | `handoff-review` | matrix-handoff-review-haiku | 3/3 | 7/11 | 1/1 | 4/4 | 38/44 | 10/12 |
 | `oneshot` | matrix-oneshot-opus | 3/3 | 8/11 | 1/1 | 4/4 | 42/44 | 11/12 |
 | `skill` | matrix-skill | 2/3 | 8/11 | 1/1 | 4/4 | 39/44 | 8/12 |
+| `handoff` | matrix-handoff-opus | 2/3 | 7/11 | 1/1 | 4/4 | 38/44 | 10/12 |
+| `handoff` | hard-handoff-sonnet | - | 2/2 | - | - | 7/7 | - |
+| `oneshot` | hard-oneshot-opus | - | 2/2 | - | - | 6/7 | - |
 
 ## Review recall vs. fixes landed
 
@@ -133,6 +163,9 @@ The gap between what the reviewer found and what the implementer landed is the c
 | `handoff-review` | matrix-handoff-review-haiku | 66/76 | 0 | 63 | 96% |
 | `oneshot` | matrix-oneshot-opus | 66/76 | 0 | 69 | 105% |
 | `skill` | matrix-skill | 60/76 | 0 | 62 | 103% |
+| `handoff` | matrix-handoff-opus | 66/76 | 0 | 62 | 94% |
+| `handoff` | hard-handoff-sonnet | 10/10 | 0 | 9 | 90% |
+| `oneshot` | hard-oneshot-opus | 9/10 | 0 | 8 | 89% |
 
 ## Tokens and context, per phase
 
@@ -157,6 +190,14 @@ The gap between what the reviewer found and what the implementer landed is the c
 | `oneshot` | verify | - | 16 | 15 | 33,103 | 667,681 | 776,815 | 809,918 | $2.253 | 119,232 (12%) |
 | `skill` | skill | opus | 23 | 62 | 18,128 | 1,004,578 | 1,059,232 | 1,077,360 | $4.243 | 90,067 (9%) |
 | `skill` | verify | - | 14 | 13 | 27,202 | 802,470 | 893,289 | 920,491 | $1.989 | 100,911 (10%) |
+| `handoff` | review | opus | 16 | 15 | 61,406 | 992,014 | 1,086,726 | 1,148,132 | $2.978 | 104,800 (10%) |
+| `handoff` | fix | opus | 20 | 19 | 34,640 | 1,459,712 | 1,547,867 | 1,582,507 | $2.477 | 98,235 (10%) |
+| `handoff` | verify | - | 17 | 16 | 31,227 | 681,227 | 781,617 | 812,844 | $2.125 | 110,486 (11%) |
+| `handoff` | review | opus | 10 | 9 | 30,254 | 489,022 | 548,500 | 578,754 | $1.596 | 69,574 (7%) |
+| `handoff` | fix | sonnet | 5 | 4 | 7,667 | 193,599 | 237,626 | 245,293 | $0.291 | 54,240 (5%) |
+| `handoff` | verify | - | 6 | 5 | 14,534 | 204,409 | 256,942 | 271,476 | $0.991 | 62,641 (6%) |
+| `oneshot` | oneshot | opus | 14 | 13 | 31,511 | 684,221 | 745,127 | 776,638 | $1.739 | 70,998 (7%) |
+| `oneshot` | verify | - | 8 | 7 | 15,487 | 313,506 | 369,595 | 385,082 | $1.105 | 66,193 (7%) |
 
 ## Where the handoff leaked
 
@@ -203,6 +244,24 @@ WP-02 BUG-02 SEC-02 SEC-27 BUG-05 JS-04
 
 ```
 WP-02 WP-03 BUG-02 SEC-02 WP-04 SEC-27 BUG-05 SEC-38 SEC-39 SEC-40 A11Y-03 DEF-02 JS-04
+```
+
+**`handoff` / matrix-handoff-opus** — 13 still open:
+
+```
+WP-02 WP-03 BUG-02 SEC-02 SEC-03 SEC-04 SEC-27 SEC-31 BUG-04 BUG-05 SEC-38 A11Y-03 JS-04
+```
+
+**`handoff` / hard-handoff-sonnet** — 0 still open:
+
+```
+(none)
+```
+
+**`oneshot` / hard-oneshot-opus** — 1 still open:
+
+```
+H-07
 ```
 
 ## Raw data

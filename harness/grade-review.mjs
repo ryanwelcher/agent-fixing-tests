@@ -30,7 +30,9 @@ const lines = readFileSync( resolve( path ), 'utf8' ).toLowerCase().split( '\n' 
 const WINDOW = 12;
 
 function found( issue ) {
-	const names = [ issue.file.toLowerCase(), basename( issue.file ).toLowerCase() ];
+	// A cross-file defect lists several files; a mention of any of them counts.
+	const paths = Array.isArray( issue.file ) ? issue.file : [ issue.file ];
+	const names = paths.flatMap( ( f ) => [ f.toLowerCase(), basename( f ).toLowerCase() ] );
 	const hits = [];
 	lines.forEach( ( line, i ) => {
 		if ( names.some( ( n ) => line.includes( n ) ) ) hits.push( i );

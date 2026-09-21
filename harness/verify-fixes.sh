@@ -13,7 +13,8 @@ SANDBOX="$( mktemp -d "${TMPDIR:-/tmp}/wpem-verify-XXXXXX" )"
 trap 'rm -rf "$SANDBOX"' EXIT
 cp -R "$RUN/plugin-fixed" "$SANDBOX/plugin"
 cp "$RUN/fix.diff" "$SANDBOX/fix.diff" 2>/dev/null || touch "$SANDBOX/fix.diff"
-node "$ROOT/harness/claims.mjs" "$RUN" > "$SANDBOX/claims.json"
+RUN_KEY="$( fixture_key "$( run_fixture "$NAME" )" )"
+node "$ROOT/harness/claims.mjs" "$RUN" --key="$RUN_KEY" > "$SANDBOX/claims.json"
 
 CLAIMS=$( node -e "console.log(JSON.parse(require('fs').readFileSync('$SANDBOX/claims.json','utf8')).length)" )
 if [ "$CLAIMS" = "0" ]; then

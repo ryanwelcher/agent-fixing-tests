@@ -19,7 +19,17 @@ const argv = process.argv.slice( 2 );
 const opt = ( n, d = null ) => { const i = argv.indexOf( `--${ n }` ); return i === -1 ? d : argv[ i + 1 ]; };
 const runDir = resolve( argv.find( ( a ) => ! a.startsWith( '--' ) ) || '.' );
 
-const readJson = ( p, d = null ) => ( existsSync( p ) ? JSON.parse( readFileSync( p, 'utf8' ) ) : d );
+// A phase that crashed can leave a zero-byte or truncated artifact behind.
+// Losing a whole run's recording to that is worse than recording without it.
+const readJson = ( p, d = null ) => {
+	if ( ! existsSync( p ) ) return d;
+	try {
+		return JSON.parse( readFileSync( p, 'utf8' ) );
+	} catch ( e ) {
+		console.warn( `record: ignoring unreadable ${ basename( p ) } (${ e.message })` );
+		return d;
+	}
+};
 
 const score = readJson( join( runDir, 'score.json' ) );
 const usage = readJson( join( runDir, 'usage.json' ) );
