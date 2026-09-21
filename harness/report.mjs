@@ -19,7 +19,14 @@ const LEDGER = join( ROOT, 'results', 'runs.jsonl' );
 
 if ( ! existsSync( LEDGER ) ) { console.error( 'no results/runs.jsonl yet - run the self-test first' ); process.exit( 1 ); }
 
-const rows = readFileSync( LEDGER, 'utf8' ).split( '\n' ).filter( Boolean ).map( ( l ) => JSON.parse( l ) );
+const all = readFileSync( LEDGER, 'utf8' ).split( '\n' ).filter( Boolean ).map( ( l ) => JSON.parse( l ) );
+
+// The ledger is append-only and re-scoring a run (for example re-running
+// verification after the fact) appends a second row. Keep the newest per run.
+const latest = new Map();
+for ( const r of all ) latest.set( r.run, r );
+const rows = [ ...latest.values() ];
+const superseded = all.length - rows.length;
 
 const n = ( v, d = 0 ) => ( v === null || v === undefined ? '-' : Number( v ).toLocaleString( 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d } ) );
 const usd = ( v ) => ( v === null || v === undefined ? '-' : '$' + Number( v ).toFixed( 3 ) );
@@ -34,7 +41,7 @@ function table( headers, data ) {
 
 const md = [];
 md.push( '# Two-model review handoff: results\n' );
-md.push( `_Generated ${ new Date().toISOString().slice( 0, 16 ).replace( 'T', ' ' ) } from ${ rows.length } run(s) in \`results/runs.jsonl\`._\n` );
+md.push( `_Generated ${ new Date().toISOString().slice( 0, 16 ).replace( 'T', ' ' ) } from ${ rows.length } run(s) in \`results/runs.jsonl\`${ superseded ? ` (${ superseded } superseded row(s) ignored)` : '' }._\n` );
 md.push( 'Fixture: `wp-event-manager`, a WordPress plugin with 76 deliberately seeded defects' );
 md.push( '(22 critical, 32 high, 13 medium, 9 low). 75 are checked by deterministic regex detectors;' );
 md.push( 'one is graded by hand. Fix rate is measured on the code, not claimed by the model.\n' );
@@ -166,4 +173,4 @@ const phaseRows = rows.flatMap( ( r ) => ( r.phases || [] ).map( ( p ) => phaseC
 } ).join( ',' ) ) );
 writeFileSync( join( ROOT, 'results', 'phases.csv' ), [ phaseCols.join( ',' ), ...phaseRows ].join( '\n' ) + '\n' );
 
-console.log( `report: ${ rows.length } run(s) -> results/report.md, results.csv, phases.csv` );
+console.log( `report: ${ rows.length } run(s)${ superseded ? `, ${ superseded } superseded` : '' } -> results/report.md, results.csv, phases.csv` );

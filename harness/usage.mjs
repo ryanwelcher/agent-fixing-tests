@@ -132,7 +132,7 @@ if ( cmd === 'phase' ) {
 
 if ( cmd === 'report' ) {
 	const runDir = resolve( positional[ 0 ] || '.' );
-	const order = [ 'review', 'fix', 'oneshot', 'judge' ];
+	const order = [ 'review', 'fix', 'oneshot', 'skill', 'judge', 'verify' ];
 	const found = readdirSync( runDir ).filter( ( f ) => f.endsWith( '.jsonl' ) );
 	found.sort( ( a, b ) => order.indexOf( a.replace( '.jsonl', '' ) ) - order.indexOf( b.replace( '.jsonl', '' ) ) );
 
@@ -144,8 +144,10 @@ if ( cmd === 'report' ) {
 		return p;
 	} );
 
-	// The judge grades the run; it is not part of the run's own cost.
-	const billable = phases.filter( ( p ) => p.label !== 'judge' );
+	// The judge and the fix verifier grade the run; they are measurement, not
+	// part of the run's own cost. Counting them would inflate cost-per-fix.
+	const GRADING = new Set( [ 'judge', 'verify' ] );
+	const billable = phases.filter( ( p ) => ! GRADING.has( p.label ) );
 
 	const report = {
 		run: basename( runDir ),
@@ -183,7 +185,7 @@ if ( cmd === 'report' ) {
 	const B = '\x1b[1m', D = '\x1b[2m', R = '\x1b[0m', Y = '\x1b[33m';
 	console.log( `\n${ B }phase      model        turns  tools   output    cache-rd   billed-in     total      cost   peak-ctx${ R }` );
 	for ( const p of phases ) {
-		const tag = p.label === 'judge' ? `${ D }judge*${ R }` : p.label;
+		const tag = GRADING.has( p.label ) ? `${ D }${ p.label }*${ R }` : p.label;
 		console.log(
 			'  ' + tag.padEnd( 9 ) +
 			( p.model || '?' ).padEnd( 12 ) +
@@ -212,7 +214,7 @@ if ( cmd === 'report' ) {
 		usd( t.cost ).padStart( 10 ) +
 		fmt( t.peakContext ).padStart( 15 )
 	);
-	if ( phases.some( ( p ) => p.label === 'judge' ) ) console.log( `  ${ D }* judge excluded from run total - it grades the run, it is not part of it${ R }` );
+	if ( phases.some( ( p ) => GRADING.has( p.label ) ) ) console.log( `  ${ D }* grading phases excluded from run total - they measure the run, they are not part of it${ R }` );
 
 	if ( report.score ) {
 		console.log( `\n  ${ B }issues fixed${ R }  ${ report.score.fixed }/${ report.score.total }` );
