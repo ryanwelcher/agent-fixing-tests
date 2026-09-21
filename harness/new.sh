@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
-# harness/new.sh <run-name> - start a fresh run from the pristine fixture.
+# harness/new.sh <run-name> [--force] - start a fresh run from the pristine fixture.
 source "$( dirname "${BASH_SOURCE[0]}" )/_common.sh"
 
 NAME="${1:-}"
-[ -n "$NAME" ] || die "usage: harness/new.sh <run-name>"
+[ -n "$NAME" ] || die "usage: harness/new.sh <run-name> [--force]"
+
+FORCE=0
+for a in "$@"; do [ "$a" = "--force" ] && FORCE=1; done
 
 DEST="$RUNS/$NAME"
 if [ -d "$DEST" ]; then
-  read -r -p "run '$NAME' already exists. Delete and recreate? [y/N] " a
-  [ "$a" = "y" ] || die "aborted"
+  if [ "$FORCE" = "0" ]; then
+    read -r -p "run '$NAME' already exists. Delete and recreate? [y/N] " a
+    [ "$a" = "y" ] || die "aborted"
+  fi
   rm -rf "$DEST"
 fi
 
