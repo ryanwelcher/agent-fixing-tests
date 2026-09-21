@@ -3,7 +3,24 @@
 set -euo pipefail
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
-FIXTURE="$ROOT/fixture/wp-event-manager"
+# Fixture registry. FIXTURE=<name> selects one; the default keeps every
+# existing script and run working unchanged.
+FIXTURE_NAME="${FIXTURE:-wp-event-manager}"
+FIXTURE="$ROOT/fixture/$FIXTURE_NAME"
+
+# Maps a fixture to its answer key.
+fixture_key() {
+  case "${1:-$FIXTURE_NAME}" in
+    wp-member-directory) echo "$ROOT/ground-truth/issues-hard.mjs" ;;
+    *)                   echo "$ROOT/ground-truth/issues.mjs" ;;
+  esac
+}
+
+# A run records which fixture it used, so scoring picks the right key later.
+run_fixture() {
+  local f="$RUNS/$1/fixture.txt"
+  [ -f "$f" ] && cat "$f" || echo "wp-event-manager"
+}
 RUNS="$ROOT/runs"
 SKILL="$ROOT/.claude/skills/review-handoff"
 RESULTS="$ROOT/results"
@@ -31,7 +48,7 @@ write_context() {
   cat > "$sandbox/.review-handoff/context.md" <<CTX
 # Context
 
-- **Target:** \`./plugin\` - a WordPress plugin.
+- **Target:** \`./plugin\` - a WordPress plugin ($FIXTURE_NAME).
 - **Scope:** every file under \`./plugin\` ($( find "$sandbox/plugin" -type f | wc -l | tr -d ' ' ) files).
 - **Verify command:** \`php -l\` on every \`.php\` file and \`node --check\` on every \`.js\` file.
   There is no test suite.

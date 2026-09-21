@@ -8,7 +8,8 @@ import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname( fileURLToPath( import.meta.url ) );
-const { issues } = await import( resolve( HERE, '../ground-truth/issues.mjs' ) );
+const keyArg = process.argv.find( ( a ) => a.startsWith( '--key=' ) );
+const { issues } = await import( keyArg ? resolve( keyArg.slice( 6 ) ) : resolve( HERE, '../ground-truth/issues.mjs' ) );
 const runDir = resolve( process.argv[ 2 ] || '.' );
 const scorePath = join( runDir, 'score.json' );
 if ( ! existsSync( scorePath ) ) { console.error( 'no score.json' ); process.exit( 1 ); }

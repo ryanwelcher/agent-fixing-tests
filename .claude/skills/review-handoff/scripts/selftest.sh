@@ -9,6 +9,7 @@
 #   --implementers "M1 M2"    run the handoff arm once per implementer (default "sonnet haiku")
 #   --judge M | --no-judge    LLM review-recall grading (default opus)
 #   --verify M | --no-verify  semantic fix verification (default opus; off in quick)
+#   --fixture NAME            wp-event-manager (default) or wp-member-directory (hard tier)
 #   --tag NAME                run-name prefix
 #
 # Every arm scores against ground-truth/issues.mjs and appends to results/runs.jsonl.
@@ -22,6 +23,7 @@ say() { printf '\n\033[1m### %s\033[0m\n' "$*"; }
 die() { printf '\033[31merror:\033[0m %s\n' "$*" >&2; exit 1; }
 
 REVIEWER=""; IMPLEMENTERS=""; JUDGE="opus"; VERIFY="opus"; TAG="$( date +%m%d-%H%M )"; ARMS=()
+export FIXTURE="${FIXTURE:-wp-event-manager}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --reviewer) REVIEWER="$2"; shift 2 ;;
@@ -31,6 +33,7 @@ while [ $# -gt 0 ]; do
     --no-judge) JUDGE=""; shift ;;
     --verify) VERIFY="$2"; shift 2 ;;
     --no-verify) VERIFY=""; shift ;;
+    --fixture) export FIXTURE="$2"; shift 2 ;;
     --tag) TAG="$2"; shift 2 ;;
     quick)
       ARMS=( handoff ); REVIEWER="${REVIEWER:-haiku}"; IMPLEMENTERS="${IMPLEMENTERS:-haiku}"
@@ -53,12 +56,16 @@ command -v claude >/dev/null || die "claude CLI not found"
 command -v node   >/dev/null || die "node not found"
 command -v php    >/dev/null || die "php not found (needed to lint the fixture)"
 
-say "detector baseline"
-node "$H/check.mjs" "$ROOT/fixture/wp-event-manager" --baseline \
+KEY="$ROOT/ground-truth/issues.mjs"
+[ "$FIXTURE" = "wp-member-directory" ] && KEY="$ROOT/ground-truth/issues-hard.mjs"
+[ -d "$ROOT/fixture/$FIXTURE" ] || die "no such fixture: $FIXTURE"
+
+say "detector baseline ($FIXTURE)"
+node "$H/check.mjs" "$ROOT/fixture/$FIXTURE" --key="$KEY" --baseline \
   || die "the answer key no longer matches the fixture - fix that before measuring anything"
 
-printf '\narms:         %s\nreviewer:     %s\nimplementers: %s\njudge:        %s\nverify:       %s\ntag:          %s\n' \
-  "${ARMS[*]}" "$REVIEWER" "${IMPL_LIST[*]}" "${JUDGE:-off}" "${VERIFY:-off}" "$TAG"
+printf '\nfixture:      %s\narms:         %s\nreviewer:     %s\nimplementers: %s\njudge:        %s\nverify:       %s\ntag:          %s\n' \
+  "$FIXTURE" "${ARMS[*]}" "$REVIEWER" "${IMPL_LIST[*]}" "${JUDGE:-off}" "${VERIFY:-off}" "$TAG"
 
 # score <run> <arm> <implementer>
 score_run() {

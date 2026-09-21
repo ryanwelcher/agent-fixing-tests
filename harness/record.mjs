@@ -54,11 +54,16 @@ if ( Array.isArray( heur ) ) {
 
 let recallJudge = null;
 if ( judge?.matched ) {
+	const decoyFp = ( judge.decoys || [] ).filter( ( d ) => d.verdict === 'false_positive' ).length;
+	const extraFp = judge.extra?.filter( ( e ) => e.verdict === 'false-positive' ).length ?? 0;
 	recallJudge = {
 		matched: judge.matched.length,
+		partial: judge.partial?.length ?? null,
 		missed: judge.missed?.length ?? null,
 		extra_valid: judge.extra?.filter( ( e ) => e.verdict === 'valid' ).length ?? null,
-		false_positives: judge.extra?.filter( ( e ) => e.verdict === 'false-positive' ).length ?? null,
+		decoys_flagged: decoyFp,
+		decoys_total: ( judge.decoys || [] ).length || null,
+		false_positives: extraFp + decoyFp,
 	};
 }
 
@@ -81,7 +86,7 @@ const row = {
 	reviewer: opt( 'reviewer', null ),
 	implementer: opt( 'implementer', null ),
 	notes: opt( 'notes', null ),
-	fixture: 'wp-event-manager',
+	fixture: opt( 'fixture', 'wp-event-manager' ),
 
 	issues_total: auto.length,
 	fixed: fixed.length,

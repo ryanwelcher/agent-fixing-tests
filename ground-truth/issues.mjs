@@ -109,13 +109,12 @@ export const issues = [
 		require: [/home_url|esc_url_raw|sanitize_text_field/],
 	},
 	{
-		id: 'SEC-05', cat: 'security', sev: 'critical',
+		id: 'SEC-05', cat: 'security', sev: 'medium',
 		file: 'includes/functions.php',
-		title: 'Hand-rolled authorization with an email-match backdoor',
-		why: 'Anyone whose email matches the notify address is treated as an admin; roles are checked with a loose in_array().',
-		keywords: ['capability', 'current_user_can', 'authorization', 'role', 'in_array'],
+		title: 'Dead hand-rolled authorization helper with an email-match backdoor',
+		why: 'wpem_user_can_manage() treats anyone whose email matches the notify address as an administrator, and checks roles with a loose in_array(). It is called from nowhere, so as it stands it is not exploitable - it is a trap waiting for its first caller. A review that notices it is unreachable and downgrades it is reading the code correctly, which is why this is medium and not critical. Deleting it and fixing it both count as a fix.',
+		keywords: ['capability', 'current_user_can', 'authorization', 'role', 'in_array', 'dead code', 'unreachable', 'unused', 'never called'],
 		forbid: [/\$user->user_email ==/],
-		require: [/current_user_can/],
 	},
 	{
 		id: 'TZ-01', cat: 'correctness', sev: 'medium',

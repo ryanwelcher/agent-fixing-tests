@@ -17,9 +17,12 @@ if [ -d "$DEST" ]; then
   rm -rf "$DEST"
 fi
 
+[ -d "$FIXTURE" ] || die "no such fixture: $FIXTURE_NAME"
+
 mkdir -p "$DEST"
 cp -R "$FIXTURE" "$DEST/plugin"
+printf '%s\n' "$FIXTURE_NAME" > "$DEST/fixture.txt"
 
-say "created $DEST/plugin from the fixture"
-node "$ROOT/harness/check.mjs" "$DEST/plugin" --baseline
+say "created $DEST/plugin from fixture '$FIXTURE_NAME'"
+node "$ROOT/harness/check.mjs" "$DEST/plugin" --key="$( fixture_key )" --baseline
 say "next: harness/review.sh $NAME <model>"

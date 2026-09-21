@@ -7,6 +7,8 @@ source "$( dirname "${BASH_SOURCE[0]}" )/_common.sh"
 NAME="${1:-}"; require_run "$NAME"; shift
 RUN="$RUNS/$NAME"
 TARGET="$RUN/plugin-fixed"; [ -d "$TARGET" ] || TARGET="$RUN/plugin"
+RUN_FIXTURE="$( run_fixture "$NAME" )"
+RUN_KEY="$( fixture_key "$RUN_FIXTURE" )"
 
 VERIFY_MODEL=""
 ARGS=()
@@ -25,23 +27,28 @@ else
 fi
 
 echo; say "public surface"
-node "$ROOT/harness/surface.mjs" "$TARGET" --json > "$RUN/surface.json" 2>/dev/null || true
-node "$ROOT/harness/surface.mjs" "$TARGET" || true
+if [ "$RUN_FIXTURE" = "wp-event-manager" ]; then
+  node "$ROOT/harness/surface.mjs" "$TARGET" --json > "$RUN/surface.json" 2>/dev/null || true
+  node "$ROOT/harness/surface.mjs" "$TARGET" || true
+else
+  echo '{ "ok": null, "missing": [], "note": "no surface map for this fixture" }' > "$RUN/surface.json"
+  echo "  (no surface map for $RUN_FIXTURE)"
+fi
 
 if [ -f "$RUN/REVIEW.md" ]; then
-  node "$ROOT/harness/grade-review.mjs" "$RUN/REVIEW.md" --json > "$RUN/review-grade.json" 2>/dev/null || true
+  node "$ROOT/harness/grade-review.mjs" "$RUN/REVIEW.md" --key="$RUN_KEY" --json > "$RUN/review-grade.json" 2>/dev/null || true
   echo; say "review recall (heuristic - over-counts; judge.sh is the real number)"
-  node "$ROOT/harness/grade-review.mjs" "$RUN/REVIEW.md" 2>/dev/null | tail -6 || true
+  node "$ROOT/harness/grade-review.mjs" "$RUN/REVIEW.md" --key="$RUN_KEY" 2>/dev/null | tail -6 || true
 fi
 
 echo; say "fix score (detectors)"
-node "$ROOT/harness/check.mjs" "$TARGET" --json > "$RUN/score.json"
-node "$ROOT/harness/check.mjs" "$TARGET" 2>/dev/null | tail -8 || true
+node "$ROOT/harness/check.mjs" "$TARGET" --key="$RUN_KEY" --json > "$RUN/score.json"
+node "$ROOT/harness/check.mjs" "$TARGET" --key="$RUN_KEY" 2>/dev/null | tail -8 || true
 
 if [ -n "$VERIFY_MODEL" ]; then
   echo; "$ROOT/harness/verify-fixes.sh" "$NAME" "$VERIFY_MODEL" || warn "verification failed"
 fi
 
 node "$ROOT/harness/usage.mjs" report "$RUN" || true
-node "$ROOT/harness/record.mjs" "$RUN" "${ARGS[@]}"
+node "$ROOT/harness/record.mjs" "$RUN" --fixture "$RUN_FIXTURE" "${ARGS[@]}"
 node "$ROOT/harness/report.mjs"

@@ -10,7 +10,7 @@ RUN="$RUNS/$NAME"
 SANDBOX="$( mktemp -d "${TMPDIR:-/tmp}/wpem-judge-XXXXXX" )"
 trap 'rm -rf "$SANDBOX"' EXIT
 cp "$RUN/REVIEW.md" "$SANDBOX/REVIEW.md"
-node "$ROOT/harness/export-key.mjs" > "$SANDBOX/key.json"
+node "$ROOT/harness/export-key.mjs" --key="$( fixture_key "$( run_fixture "$NAME" )" )" > "$SANDBOX/key.json"
 
 say "judge: model=$MODEL run=$NAME"
 ( cd "$SANDBOX" && claude -p "$( cat "$ROOT/prompts/judge.md" )" \

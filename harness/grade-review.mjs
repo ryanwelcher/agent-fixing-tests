@@ -15,7 +15,8 @@ import { resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname( fileURLToPath( import.meta.url ) );
-const { issues } = await import( resolve( HERE, '../ground-truth/issues.mjs' ) );
+const keyArg = process.argv.find( ( a ) => a.startsWith( '--key=' ) );
+const { issues } = await import( keyArg ? resolve( keyArg.slice( 6 ) ) : resolve( HERE, '../ground-truth/issues.mjs' ) );
 
 const args = process.argv.slice( 2 );
 const asJson = args.includes( '--json' );

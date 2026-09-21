@@ -14,10 +14,12 @@ import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname( fileURLToPath( import.meta.url ) );
-const { issues } = await import( resolve( HERE, '../ground-truth/issues.mjs' ) );
 
 const args = process.argv.slice( 2 );
 const flags = new Set( args.filter( ( a ) => a.startsWith( '--' ) ) );
+const keyArg = args.find( ( a ) => a.startsWith( '--key=' ) );
+const KEY = keyArg ? resolve( keyArg.slice( 6 ) ) : resolve( HERE, '../ground-truth/issues.mjs' );
+const { issues } = await import( KEY );
 const sevArg = args.find( ( a ) => a.startsWith( '--sev=' ) );
 const sevFilter = sevArg ? sevArg.slice( 6 ).split( ',' ) : null;
 const target = resolve( args.find( ( a ) => ! a.startsWith( '--' ) ) || '.' );
@@ -36,18 +38,28 @@ const results = [];
 for ( const issue of issues ) {
 	if ( sevFilter && ! sevFilter.includes( issue.sev ) ) continue;
 
-	const base = { id: issue.id, cat: issue.cat, sev: issue.sev, file: issue.file, title: issue.title };
+	const base = {
+		id: issue.id, cat: issue.cat, sev: issue.sev, title: issue.title,
+		file: Array.isArray( issue.file ) ? issue.file.join( ' + ' ) : issue.file,
+	};
 
 	if ( issue.codeCheck === false ) {
 		results.push( { ...base, status: 'manual', notes: [ 'no reliable textual signature - grade from the review/plan' ] } );
 		continue;
 	}
 
-	const src = read( issue.file );
-	if ( src === null ) {
-		results.push( { ...base, status: 'missing-file', notes: [ `${ issue.file } not found in target` ] } );
+	// A cross-file defect declares several files; concatenate them so a fix
+	// spanning the set is judged as one thing.
+	const paths = Array.isArray( issue.file ) ? issue.file : [ issue.file ];
+	const parts = paths.map( ( f ) => [ f, read( f ) ] );
+	const absent = parts.filter( ( [ , v ] ) => v === null ).map( ( [ f ] ) => f );
+
+	if ( absent.length === paths.length ) {
+		results.push( { ...base, status: 'missing-file', notes: [ `${ absent.join( ', ' ) } not found in target` ] } );
 		continue;
 	}
+
+	const src = parts.map( ( [ f, v ] ) => `/* ${ f } */\n${ v || '' }` ).join( '\n' );
 
 	const notes = [];
 
