@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# harness/review.sh <run-name> [model] - the reviewing model reads the plugin and
-# writes REVIEW.md + PLAN.md. It never edits the plugin.
+# harness/review.sh <run-name> [model] - reviewer arm. Reads the plugin, writes
+# REVIEW.md + PLAN.md. Must not edit the code.
 source "$( dirname "${BASH_SOURCE[0]}" )/_common.sh"
 
 NAME="${1:-}"; require_run "$NAME"
@@ -10,31 +10,23 @@ RUN="$RUNS/$NAME"
 SANDBOX="$( mktemp -d "${TMPDIR:-/tmp}/wpem-review-XXXXXX" )"
 trap 'rm -rf "$SANDBOX"' EXIT
 cp -R "$RUN/plugin" "$SANDBOX/plugin"
+write_context "$SANDBOX"
 
-say "review: model=$MODEL run=$NAME sandbox=$SANDBOX"
-START=$( date +%s )
+PROMPT="$SANDBOX/.prompt.md"
+{ cat "$SKILL/reference/review-rubric.md"; echo; cat "$SANDBOX/.review-handoff/context.md"; } > "$PROMPT"
 
-( cd "$SANDBOX" && claude -p "$( cat "$ROOT/prompts/reviewer.md" )" \
-    --model "$MODEL" $( perm_flags ) --output-format text ) \
-  > "$RUN/reviewer-stdout.txt" 2>"$RUN/reviewer-stderr.txt" || true
-
-ELAPSED=$(( $( date +%s ) - START ))
+say "review: model=$MODEL run=$NAME"
+run_agent review "$MODEL" "$PROMPT" "$SANDBOX" "$RUN"
 
 for f in REVIEW.md PLAN.md; do
-  if [ -f "$SANDBOX/$f" ]; then cp "$SANDBOX/$f" "$RUN/$f"; else
-    printf '\033[33mwarn:\033[0m reviewer did not produce %s\n' "$f" >&2
-  fi
+  if [ -f "$SANDBOX/.review-handoff/$f" ]; then cp "$SANDBOX/.review-handoff/$f" "$RUN/$f"
+  else warn "reviewer did not produce $f"; fi
 done
 
-# The reviewer was told not to touch the plugin. Verify that.
 if ! diff -rq "$RUN/plugin" "$SANDBOX/plugin" >/dev/null 2>&1; then
-  printf '\033[33mwarn:\033[0m reviewer modified the plugin - review runs should be read-only\n' >&2
-  diff -rq "$RUN/plugin" "$SANDBOX/plugin" || true
+  warn "reviewer MODIFIED the plugin - review runs must be read-only"
+  diff -rq "$RUN/plugin" "$SANDBOX/plugin" > "$RUN/review-violation.txt" 2>&1 || true
 fi
 
-cat > "$RUN/review-meta.json" <<JSON
-{ "phase": "review", "model": "$MODEL", "seconds": $ELAPSED, "run": "$NAME" }
-JSON
-
-say "wrote $RUN/REVIEW.md and $RUN/PLAN.md in ${ELAPSED}s"
-say "next: harness/fix.sh $NAME <model>"
+echo "{ \"phase\": \"review\", \"model\": \"$MODEL\", \"seconds\": $WALL }" > "$RUN/review-meta.json"
+say "wrote REVIEW.md + PLAN.md in ${WALL}s"

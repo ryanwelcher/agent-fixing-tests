@@ -1,108 +1,121 @@
-# agent-fixing-tests
+# review-handoff
 
-A benchmark for the two-model workflow: **one model reviews and plans, a different model
-implements the fixes.** The subject is a deliberately awful WordPress plugin with 76
-seeded defects and a deterministic scorer.
+A Claude Code skill that **reviews a codebase with one model, then hands the plan to a
+second model in a fresh context to implement it** — plus the fixture and scoring rig
+that prove it still works.
 
-> **The plugin in `fixture/` is intentionally vulnerable.** It contains SQL injection,
-> unauthenticated destructive endpoints, arbitrary file upload and hardcoded credentials.
-> It is a test fixture. Never install it on a real WordPress site.
+Run it and come back to a branch with the fixes applied, a plan, an implementation
+report, and an honest list of what was skipped.
 
-## What gets measured
+```
+/review-handoff                        review and fix the current repo
+/review-handoff src/ --dry-run         plan only, change nothing
+/review-handoff --selftest quick       prove the skill works, on a known-bad fixture
+```
 
-| Phase | Question | Graded by |
-| --- | --- | --- |
-| Review | Did the reviewing model find the defects? | `harness/judge.sh` (LLM judge vs. the key), or `grade-review.mjs` for a fast heuristic |
-| Plan | Was the plan good enough for a second model to act on with no context? | `--plan-only` mode, then the fix score |
-| Fix | Did the implementing model actually fix them, without breaking the plugin? | `harness/check.mjs` — 75 regex detectors + `php -l` / `node --check` |
+## Why two agents
+
+The implementer never sees the reviewer's reasoning. It gets `PLAN.md` and nothing else.
+
+That is the whole method. A plan that only makes sense next to the review it came from
+fails loudly here instead of being silently rescued by shared context — which is exactly
+what happens when one agent reviews and fixes in a single session, and exactly why that
+version looks better than it is.
+
+The self-test measures the cost of that choice rather than assuming it.
 
 ## Layout
 
 ```
-fixture/wp-event-manager/   the broken plugin (pristine; never edited by a run)
-ground-truth/issues.mjs     the answer key: 76 issues with detectors and keywords
-harness/                    run scripts and scorers
-prompts/                    reviewer.md, implementer.md, judge.md
-runs/<name>/                one experiment: plugin/, REVIEW.md, PLAN.md, plugin-fixed/, score.json
+.claude/skills/review-handoff/
+  SKILL.md                    the orchestrator: preflight, review, implement, verify, report
+  reference/review-rubric.md  the reviewer's prompt
+  reference/plan-contract.md  the implementer's prompt
+  reference/self-test.md      the arms and how to read them
+  scripts/selftest.sh         the self-test driver
+
+fixture/wp-event-manager/     a WordPress plugin with 76 seeded defects
+ground-truth/issues.mjs       the answer key: detectors + keywords per defect
+harness/                      arms, scorers, telemetry, ledger, report generator
+results/                      runs.jsonl, report.md, results.csv, phases.csv
+runs/<name>/                  per-run transcripts and artifacts (git-ignored)
 ```
 
-## Run it
+The self-test runs the **same prompt files the skill uses**. There is no second copy to
+drift out of sync.
+
+## Using the skill on a real repo
+
+Preflight refuses to start on a dirty tree, then works on a new
+`review-handoff/<timestamp>` branch and commits a checkpoint after the plan, so the fix
+phase is always one `git reset` from undone. It never pushes and never opens a PR.
+
+Output lands in `.review-handoff/`: `REVIEW.md`, `PLAN.md`, `IMPLEMENTATION.md`,
+`RESULT.md`. Read the skipped steps in `IMPLEMENTATION.md` first — that list is the most
+useful thing the run produces.
+
+## The self-test
 
 ```bash
-# full pipeline: fresh copy -> review -> fix -> score
-./harness/run.sh opus-to-sonnet opus sonnet
-
-# or step by step
-./harness/new.sh my-run                 # fresh copy of the fixture + detector sanity check
-./harness/review.sh my-run opus         # writes runs/my-run/REVIEW.md and PLAN.md
-./harness/fix.sh my-run sonnet          # writes runs/my-run/plugin-fixed/ and fix.diff
-./harness/score.sh my-run               # lint + fix score + heuristic review recall
-./harness/judge.sh my-run opus          # LLM-graded review recall -> GRADE.json
+.claude/skills/review-handoff/scripts/selftest.sh quick    # 1 arm, haiku, ~5 min
+.claude/skills/review-handoff/scripts/selftest.sh full     # 4 arms, ~30-60 min
+.claude/skills/review-handoff/scripts/selftest.sh handoff oneshot --reviewer opus
 ```
 
-Each agent phase runs in a `mktemp -d` sandbox containing only the plugin (and, for the
-fix phase, the plan). The answer key never enters the agent's working directory.
+Each arm copies the fixture into `mktemp -d`, runs headlessly, and scores the resulting
+code against the key. Your repo is never touched.
 
-### The interesting flag
+| Arm | What it isolates |
+| --- | --- |
+| `handoff` | the method as the skill ships it — plan only |
+| `handoff-review` | what the plan alone fails to carry |
+| `oneshot` | whether the handoff is worth paying for |
+| `skill` | that the orchestration itself works end to end |
 
-```bash
-./harness/fix.sh my-run sonnet --plan-only
-```
+`oneshot` is the control. If it matches the handoff for less money, the handoff is only
+buying an audit trail — a legitimate finding, and one worth reporting.
 
-Hands the implementer `PLAN.md` **without** `REVIEW.md`. This is the real test of the
-handoff: a plan that only makes sense next to the review it came from will score worse
-here than one written to stand alone.
+## What gets measured
 
-## Experiments worth running
+Deterministically, from the code and the CLI's own telemetry — not from what the model
+claims it did:
 
-- **Model matrix.** Same reviewer, different implementers, and vice versa. Where does
-  the score actually come from — finding the bugs or fixing them?
-- **Plan quality.** `--plan-only` vs. full context, same models. The gap is the cost of a
-  vague plan.
-- **Self-review.** Same model on both ends as the control.
-- **Cheap reviewer, strong implementer.** Often the most useful configuration to know about.
-- **Severity triage.** `node harness/check.mjs <dir> --sev=critical,high` to score only
-  what would block a release.
-- **Scope discipline.** Read `fix.diff`. An implementer that rewrote the architecture
-  instead of applying the plan is a finding, even if the score is high.
+- **Fix rate** — of 75 auto-checkable defects, how many the code no longer exhibits
+  (`harness/check.mjs`, regex detectors).
+- **Review recall** — how many of the 76 the review reported (`harness/judge.sh`, an LLM
+  judge against the key).
+- **Tokens** — input, output, cache reads and cache creation, billed separately.
+- **Cost** — `total_cost_usd` from the result envelope.
+- **Peak context** — the largest window any single turn occupied, and what share of the
+  model's window that was, reconstructed per turn from the stream-json transcript.
+- **Turns, tool calls, wall time.**
+- **Derived** — cost per issue fixed, tokens per issue fixed, and found→fixed conversion.
 
-## The answer key
+## The data
 
-`ground-truth/issues.mjs` holds one entry per seeded defect:
+Every arm appends one row to `results/runs.jsonl` (append-only; the source of truth).
+`harness/report.mjs` regenerates:
 
-```js
-{
-  id: 'SEC-09', cat: 'security', sev: 'critical',
-  file: 'includes/class-event-db.php',
-  title: 'SQL injection in get_rsvps() via $event_id and $status',
-  why: 'Unprepared string concatenation straight into the query.',
-  keywords: [ 'sql injection', 'prepare', 'wpdb', 'concatenat' ],
-  forbid: [ /WHERE event_id = " \. \$event_id/ ],   // must be gone after a fix
-  require: [ /\$wpdb->prepare/ ],                    // must be present after a fix
-}
-```
+- `results/report.md` — markdown tables, ready to paste into a draft
+- `results/results.csv` — one row per run
+- `results/phases.csv` — one row per phase, including the per-turn context series
 
-Spread: 22 critical, 32 high, 13 medium, 9 low — 44 security, 12 WP standards,
-11 correctness, 5 performance, 3 accessibility, 1 i18n.
+Full transcripts stay in `runs/<name>/*.jsonl` if you need to quote one.
 
-Every detector is verified to fire against the untouched fixture:
+## Keeping it honest
 
-```bash
-node harness/check.mjs fixture/wp-event-manager --baseline
-```
+- `node harness/check.mjs fixture/wp-event-manager --baseline` asserts every detector
+  still fires on the untouched fixture. The self-test runs this first and aborts if it
+  fails. A detector that passes on the broken fixture is measuring nothing.
+- **Detectors check the shape of a fix, not its correctness.** `/\$wpdb->prepare/` can be
+  satisfied with a wrong placeholder. Read `fix.diff` before quoting a high score.
+- **`grade-review.mjs` over-counts** — it matches file + nearby keywords, so one mention
+  of "SQL injection" can credit several of the five injections in that file. Quote
+  `judge.sh`, not the heuristic.
+- One defect (`PERF-03`) has no reliable textual signature and is graded by hand.
+- Agents run with `--dangerously-skip-permissions` inside a temp copy so they can lint
+  their own work. `SAFE=1` uses `acceptEdits` instead, at the cost of that ability.
 
-Run that after any edit to the fixture or the key. If a detector reports PASS on the
-pristine plugin, it is measuring nothing.
-
-## Known limits
-
-- **`grade-review.mjs` is a proxy, not a grade.** It matches on file + nearby keywords,
-  so one mention of "SQL injection" in `class-event-db.php` can credit several of the
-  five injection issues in that file. Use `harness/judge.sh` for a number you can quote.
-- **Detectors check for the shape of a fix, not its correctness.** A model can satisfy
-  `/\$wpdb->prepare/` with a wrong placeholder. Read `fix.diff` before trusting a high score.
-- **One issue (`PERF-03`) is marked `codeCheck: false`** — the N+1 in the shortcode loop
-  has no single textual signature. It is graded from the review and the diff by hand.
-- Agents run with `--dangerously-skip-permissions` so they can lint their own work. They
-  are confined to a temp copy. Set `SAFE=1` to use `acceptEdits` instead, at the cost of
-  the agents' ability to run `php -l`.
+> The plugin in `fixture/` is **intentionally vulnerable** — SQL injection, unauthenticated
+> destructive endpoints, arbitrary file upload, hardcoded credentials. It is a test
+> fixture. Never install it on a real site.

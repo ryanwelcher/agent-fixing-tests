@@ -1,39 +1,39 @@
 #!/usr/bin/env bash
-# harness/fix.sh <run-name> [model] - the implementing model applies PLAN.md.
-# Pass --plan-only to hand over PLAN.md without REVIEW.md (the interesting test:
-# is the plan self-sufficient?).
+# harness/fix.sh <run-name> [model] [--with-review] - implementer arm.
+# Default is plan-only, which is how the skill ships.
 source "$( dirname "${BASH_SOURCE[0]}" )/_common.sh"
 
 NAME="${1:-}"; require_run "$NAME"
 MODEL="${2:-sonnet}"
 RUN="$RUNS/$NAME"
-WITH_REVIEW=1
-for a in "$@"; do [ "$a" = "--plan-only" ] && WITH_REVIEW=0; done
+WITH_REVIEW=0
+for a in "$@"; do [ "$a" = "--with-review" ] && WITH_REVIEW=1; done
 
 [ -f "$RUN/PLAN.md" ] || die "no PLAN.md in $RUN - run harness/review.sh first"
 
 SANDBOX="$( mktemp -d "${TMPDIR:-/tmp}/wpem-fix-XXXXXX" )"
 trap 'rm -rf "$SANDBOX"' EXIT
 cp -R "$RUN/plugin" "$SANDBOX/plugin"
-cp "$RUN/PLAN.md" "$SANDBOX/PLAN.md"
-[ "$WITH_REVIEW" = "1" ] && [ -f "$RUN/REVIEW.md" ] && cp "$RUN/REVIEW.md" "$SANDBOX/REVIEW.md"
+write_context "$SANDBOX"
+cp "$RUN/PLAN.md" "$SANDBOX/.review-handoff/PLAN.md"
+[ "$WITH_REVIEW" = "1" ] && [ -f "$RUN/REVIEW.md" ] && cp "$RUN/REVIEW.md" "$SANDBOX/.review-handoff/REVIEW.md"
 
-say "fix: model=$MODEL run=$NAME plan-only=$(( 1 - WITH_REVIEW )) sandbox=$SANDBOX"
-START=$( date +%s )
+PROMPT="$SANDBOX/.prompt.md"
+{
+  cat "$SKILL/reference/plan-contract.md"; echo
+  cat "$SANDBOX/.review-handoff/context.md"; echo
+  [ "$WITH_REVIEW" = "1" ] && echo "The review that produced this plan is in \`.review-handoff/REVIEW.md\`."
+  echo "## The plan"; echo
+  cat "$RUN/PLAN.md"
+} > "$PROMPT"
 
-( cd "$SANDBOX" && claude -p "$( cat "$ROOT/prompts/implementer.md" )" \
-    --model "$MODEL" $( perm_flags ) --output-format text ) \
-  > "$RUN/implementer-stdout.txt" 2>"$RUN/implementer-stderr.txt" || true
-
-ELAPSED=$(( $( date +%s ) - START ))
+say "fix: model=$MODEL run=$NAME with-review=$WITH_REVIEW"
+run_agent fix "$MODEL" "$PROMPT" "$SANDBOX" "$RUN"
 
 rm -rf "$RUN/plugin-fixed"
 cp -R "$SANDBOX/plugin" "$RUN/plugin-fixed"
-diff -ru "$RUN/plugin" "$RUN/plugin-fixed" > "$RUN/fix.diff" || true
+[ -f "$SANDBOX/.review-handoff/IMPLEMENTATION.md" ] && cp "$SANDBOX/.review-handoff/IMPLEMENTATION.md" "$RUN/IMPLEMENTATION.md"
+diff -ru "$RUN/plugin" "$RUN/plugin-fixed" > "$RUN/fix.diff" 2>/dev/null || true
 
-cat > "$RUN/fix-meta.json" <<JSON
-{ "phase": "fix", "model": "$MODEL", "seconds": $ELAPSED, "with_review": $WITH_REVIEW, "run": "$NAME" }
-JSON
-
-say "wrote $RUN/plugin-fixed and $RUN/fix.diff in ${ELAPSED}s"
-say "next: harness/score.sh $NAME"
+echo "{ \"phase\": \"fix\", \"model\": \"$MODEL\", \"seconds\": $WALL, \"with_review\": $WITH_REVIEW }" > "$RUN/fix-meta.json"
+say "wrote plugin-fixed + fix.diff in ${WALL}s"

@@ -1,3 +1,4 @@
+# Transcripts and working copies are large and regenerable.
 runs/*
 !runs/.gitkeep
 .DS_Store
