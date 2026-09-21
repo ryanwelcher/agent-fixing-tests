@@ -1,0 +1,2 @@
+ts,run,arm,reviewer,implementer,issues_total,fixed,fix_rate,verified_fixed,verified_fix_rate,verified_superficial,verified_removed,regressions,recall_to_fix,lint_ok,surface_ok,diff_lines,cost_usd,tokens_total,tokens_output,tokens_cache_read,turns,tool_calls,peak_context,wall_seconds,cost_per_fix,tokens_per_fix,notes
+2026-09-21T15:38:50.100Z,smoke-handoff,handoff,haiku,haiku,75,35,0.467,,,,,,1,true,true,661,0.7090834000000001,3130483,42727,2989244,75,73,71202,412,0.0203,89442,

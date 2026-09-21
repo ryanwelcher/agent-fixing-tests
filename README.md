@@ -80,8 +80,16 @@ buying an audit trail — a legitimate finding, and one worth reporting.
 Deterministically, from the code and the CLI's own telemetry — not from what the model
 claims it did:
 
-- **Fix rate** — of 75 auto-checkable defects, how many the code no longer exhibits
-  (`harness/check.mjs`, regex detectors).
+- **Detector fix rate** — of 75 auto-checkable defects, how many the code no longer
+  exhibits (`harness/check.mjs`, regex detectors). The optimistic number.
+- **Verified fix rate** — of those, how many survive a judge reading the actual code
+  (`harness/verify-fixes.sh`). Catches `prepare()` with the variable still interpolated,
+  escaping applied to the wrong value, a capability check placed after the side effect.
+  **This is the number to quote.**
+- **Public surface intact** — 34 markers (routes, hooks, shortcode, DB methods, columns)
+  must still exist (`harness/surface.mjs`). Catches a model that deletes the vulnerable
+  function instead of fixing it, which otherwise scores as a pass.
+- **Regressions** — defects the fix introduced, found by the same judge reading the diff.
 - **Review recall** — how many of the 76 the review reported (`harness/judge.sh`, an LLM
   judge against the key).
 - **Tokens** — input, output, cache reads and cache creation, billed separately.
@@ -108,7 +116,9 @@ Full transcripts stay in `runs/<name>/*.jsonl` if you need to quote one.
   still fires on the untouched fixture. The self-test runs this first and aborts if it
   fails. A detector that passes on the broken fixture is measuring nothing.
 - **Detectors check the shape of a fix, not its correctness.** `/\$wpdb->prepare/` can be
-  satisfied with a wrong placeholder. Read `fix.diff` before quoting a high score.
+  satisfied with a wrong placeholder. That is why the verified rate exists — run with
+  `--verify` and quote that instead. Detector rate alone overstates the result, and it
+  overstates it most for weaker implementer models.
 - **`grade-review.mjs` over-counts** — it matches file + nearby keywords, so one mention
   of "SQL injection" can credit several of the five injections in that file. Quote
   `judge.sh`, not the heuristic.

@@ -26,6 +26,8 @@ const usage = readJson( join( runDir, 'usage.json' ) );
 const heur = readJson( join( runDir, 'review-grade.json' ) );
 const judge = readJson( join( runDir, 'GRADE.json' ) );
 const lint = readJson( join( runDir, 'lint.json' ), { ok: null } );
+const surface = readJson( join( runDir, 'surface.json' ), { ok: null, missing: [] } );
+const verify = readJson( join( runDir, 'VERIFY.json' ) );
 
 if ( ! score ) { console.error( 'record: no score.json in ' + runDir ); process.exit( 1 ); }
 
@@ -93,7 +95,27 @@ const row = {
 	recall_to_fix: recallToFix,
 
 	lint_ok: lint.ok,
+	surface_ok: surface.ok,
+	surface_missing: surface.missing || [],
 	diff_lines: diffLines,
+
+	// Semantic verification: of the detector passes, how many are real fixes.
+	// This is the honest headline number; fix_rate above is the optimistic one.
+	verified: verify?.summary
+		? {
+			correct: verify.summary.correct ?? 0,
+			superficial: verify.summary.superficial ?? 0,
+			removed: verify.summary.removed ?? 0,
+			uncertain: verify.summary.uncertain ?? 0,
+			regressions: ( verify.regressions || [] ).length,
+			regressions_detail: ( verify.regressions || [] ).slice( 0, 20 ),
+			superficial_ids: ( verify.verdicts || [] ).filter( ( v ) => v.verdict === 'superficial' || v.verdict === 'removed' ).map( ( v ) => v.id ),
+		}
+		: null,
+	verified_fixed: verify?.summary?.correct ?? null,
+	verified_fix_rate: verify?.summary?.correct !== undefined
+		? Number( ( verify.summary.correct / auto.length ).toFixed( 3 ) )
+		: null,
 
 	cost_usd: totals.cost ?? null,
 	tokens_total: totals.tokens ?? null,

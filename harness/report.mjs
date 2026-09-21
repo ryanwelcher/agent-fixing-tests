@@ -40,15 +40,44 @@ md.push( '(22 critical, 32 high, 13 medium, 9 low). 75 are checked by determinis
 md.push( 'one is graded by hand. Fix rate is measured on the code, not claimed by the model.\n' );
 
 md.push( '## Headline\n' );
+md.push( 'Two fix rates. **Detector** is the optimistic one: the broken pattern is gone and a' );
+md.push( 'plausible API appears. **Verified** is the honest one: a judge read the code and confirmed' );
+md.push( 'the defect is actually gone. Quote the verified number.\n' );
 md.push( table(
-	[ 'Arm', 'Reviewer', 'Implementer', 'Fixed', 'Fix rate', 'Cost', 'Tokens', 'Wall', 'Cost/fix', 'Lint' ],
+	[ 'Arm', 'Reviewer', 'Implementer', 'Detector', 'Verified', 'Verified rate', 'Cost', 'Tokens', 'Wall', 'Cost/verified fix', 'Surface', 'Lint' ],
 	rows.map( ( r ) => [
 		'`' + r.arm + '`', r.reviewer || '-', r.implementer || '-',
-		`${ r.fixed }/${ r.issues_total }`, pct( r.fix_rate ),
+		`${ r.fixed }/${ r.issues_total }`,
+		r.verified_fixed === null || r.verified_fixed === undefined ? '-' : `${ r.verified_fixed }/${ r.issues_total }`,
+		r.verified_fix_rate === null || r.verified_fix_rate === undefined ? '-' : pct( r.verified_fix_rate ),
 		usd( r.cost_usd ), n( r.tokens_total ), dur( r.wall_seconds ),
-		usd( r.cost_per_fix ), r.lint_ok === null ? '-' : r.lint_ok ? 'pass' : '**FAIL**',
+		r.verified?.correct ? usd( r.cost_usd / r.verified.correct ) : '-',
+		r.surface_ok === null || r.surface_ok === undefined ? '-' : r.surface_ok ? 'intact' : '**BROKEN**',
+		r.lint_ok === null ? '-' : r.lint_ok ? 'pass' : '**FAIL**',
 	] )
 ) );
+
+md.push( '\n## Fix quality\n' );
+md.push( 'Of the fixes the detectors passed, how many survive reading the code.\n' );
+md.push( table(
+	[ 'Arm', 'Implementer', 'Correct', 'Superficial', 'Removed feature', 'Uncertain', 'Regressions introduced', 'Detector overstated by' ],
+	rows.map( ( r ) => {
+		const v = r.verified;
+		if ( ! v ) return [ '`' + r.arm + '`', r.implementer || '-', '-', '-', '-', '-', '-', '-' ];
+		const overstate = r.fixed ? Math.round( ( ( r.fixed - v.correct ) / r.fixed ) * 100 ) + '%' : '-';
+		return [ '`' + r.arm + '`', r.implementer || '-', v.correct, v.superficial, v.removed, v.uncertain, v.regressions, overstate ];
+	} )
+) );
+
+const anyRegressions = rows.some( ( r ) => r.verified?.regressions_detail?.length );
+if ( anyRegressions ) {
+	md.push( '\n### Regressions the fix introduced\n' );
+	for ( const r of rows ) {
+		for ( const g of r.verified?.regressions_detail || [] ) {
+			md.push( `- \`${ r.arm }\` — **${ g.severity }** \`${ g.file }\` — ${ g.what }` );
+		}
+	}
+}
 
 md.push( '\n## Fix rate by severity\n' );
 const sevs = [ 'critical', 'high', 'medium', 'low' ];
@@ -113,11 +142,18 @@ const csvEsc = ( v ) => {
 };
 
 const runCols = [ 'ts', 'run', 'arm', 'reviewer', 'implementer', 'issues_total', 'fixed', 'fix_rate',
-	'recall_to_fix', 'lint_ok', 'diff_lines', 'cost_usd', 'tokens_total', 'tokens_output',
+	'verified_fixed', 'verified_fix_rate', 'verified_superficial', 'verified_removed', 'regressions',
+	'recall_to_fix', 'lint_ok', 'surface_ok', 'diff_lines', 'cost_usd', 'tokens_total', 'tokens_output',
 	'tokens_cache_read', 'turns', 'tool_calls', 'peak_context', 'wall_seconds', 'cost_per_fix', 'tokens_per_fix', 'notes' ];
+const flat = ( r, c ) => {
+	if ( c === 'verified_superficial' ) return r.verified?.superficial ?? null;
+	if ( c === 'verified_removed' ) return r.verified?.removed ?? null;
+	if ( c === 'regressions' ) return r.verified?.regressions ?? null;
+	return r[ c ];
+};
 writeFileSync(
 	join( ROOT, 'results', 'results.csv' ),
-	[ runCols.join( ',' ), ...rows.map( ( r ) => runCols.map( ( c ) => csvEsc( r[ c ] ) ).join( ',' ) ) ].join( '\n' ) + '\n'
+	[ runCols.join( ',' ), ...rows.map( ( r ) => runCols.map( ( c ) => csvEsc( flat( r, c ) ) ).join( ',' ) ) ].join( '\n' ) + '\n'
 );
 
 const phaseCols = [ 'run', 'arm', 'label', 'model', 'ok', 'turns', 'tool_calls', 'wall_seconds', 'cost_usd',
