@@ -1,11 +1,11 @@
 ts,run,arm,reviewer,implementer,issues_total,fixed,fix_rate,verified_fixed,verified_fix_rate,verified_superficial,verified_removed,regressions,recall_to_fix,lint_ok,surface_ok,diff_lines,cost_usd,tokens_total,tokens_output,tokens_cache_read,turns,tool_calls,peak_context,wall_seconds,cost_per_fix,tokens_per_fix,notes
-2026-09-21T16:48:29.407Z,smoke-handoff,handoff,haiku,haiku,75,35,0.467,31,0.413,4,0,11,1,true,true,661,0.7090834000000001,3130483,42727,2989244,75,73,71202,723,0.0203,89442,re-scored against corrected key (SEC-05 critical->medium)
-2026-09-21T16:48:29.494Z,matrix-handoff-sonnet,handoff,opus,sonnet,75,64,0.853,56,0.747,5,3,8,1,true,true,1149,2.942345,1000229,72451,775010,17,15,94555,1073,0.046,15629,re-scored against corrected key (SEC-05 critical->medium)
-2026-09-21T16:48:29.583Z,matrix-handoff-haiku,handoff,opus,haiku,75,62,0.827,58,0.773,3,1,12,0.925,true,true,1321,2.7502356,4123535,81086,3890032,64,62,92167,1297,0.0444,66509,re-scored against corrected key (SEC-05 critical->medium)
-2026-09-21T16:52:33.222Z,matrix-handoff-review-sonnet,handoff-review,opus,sonnet,75,58,0.773,52,0.693,5,1,8,0.906,true,true,1197,2.898515,1015464,76770,780921,16,14,89714,1169,0.05,17508,
-2026-09-21T17:51:00.128Z,matrix-handoff-review-haiku,handoff-review,opus,haiku,75,63,0.84,60,0.8,2,1,7,0.955,true,true,1212,3.229783,3616472,85243,3369330,59,53,99706,1204,0.0513,57404,
-2026-09-21T18:26:28.042Z,matrix-oneshot-opus,oneshot,opus,opus,75,69,0.92,67,0.893,2,0,5,1.045,true,true,1547,2.8852814999999996,1490744,54229,1351093,21,20,95500,985,0.0418,21605,
-2026-09-21T18:57:46.446Z,matrix-skill,skill,opus,sonnet,75,62,0.827,57,0.76,3,2,6,1.033,true,true,1159,4.242981199999999,1077360,18128,1004578,23,62,90067,1289,0.0684,17377,
-2026-09-21T20:03:23.812Z,matrix-handoff-opus,handoff,opus,opus,75,62,0.827,58,0.773,3,1,7,0.939,true,true,1352,5.455323,2730639,96046,2451726,36,34,104800,1367,0.088,44043,
+2026-09-23T13:42:32.578Z,smoke-handoff,handoff,haiku,haiku,75,35,0.467,31,0.413,4,0,10,1,true,true,661,0.7090834000000001,3130483,42727,2989244,75,73,71202,542,0.0203,89442,re-verified with a blinded diff
+2026-09-23T13:56:35.362Z,matrix-handoff-sonnet,handoff,opus,sonnet,75,64,0.853,56,0.747,6,2,8,1,true,true,1149,2.942345,1000229,72451,775010,17,15,94555,893,0.046,15629,re-verified with a blinded diff
+2026-09-23T14:05:58.715Z,matrix-handoff-haiku,handoff,opus,haiku,75,62,0.827,54,0.72,6,2,14,0.925,true,true,1321,2.7502356,4123535,81086,3890032,64,62,92167,1106,0.0444,66509,re-verified with a blinded diff
+2026-09-23T14:10:31.609Z,matrix-handoff-review-sonnet,handoff-review,opus,sonnet,75,58,0.773,53,0.707,5,0,9,0.906,true,true,1197,2.898515,1015464,76770,780921,16,14,89714,905,0.05,17508,re-verified with a blinded diff
+2026-09-23T14:19:34.354Z,matrix-handoff-review-haiku,handoff-review,opus,haiku,75,63,0.84,57,0.76,5,1,4,0.955,true,true,1212,3.229783,3616472,85243,3369330,59,53,99706,984,0.0513,57404,re-verified with a blinded diff
+2026-09-23T14:36:20.758Z,matrix-oneshot-opus,oneshot,opus,opus,75,69,0.92,65,0.867,4,0,6,1.045,true,true,1547,2.8852814999999996,1490744,54229,1351093,21,20,95500,712,0.0418,21605,re-verified with a blinded diff
+2026-09-23T18:51:15.844Z,matrix-skill,skill,opus,sonnet,75,58,0.773,54,0.72,3,1,6,0.892,true,true,1240,3.7664209,928721,12891,828366,18,56,97550,951,0.0649,16012,
+2026-09-23T14:08:03.251Z,matrix-handoff-opus,handoff,opus,opus,75,62,0.827,56,0.747,5,1,6,0.939,true,true,1352,5.455323,2730639,96046,2451726,36,34,104800,1113,0.088,44043,re-verified with a blinded diff
 2026-09-21T20:43:07.495Z,hard-handoff-sonnet,handoff,opus,sonnet,9,9,1,9,1,0,0,6,0.9,true,,384,1.8869987999999998,824047,37921,682621,15,13,69574,671,0.2097,91561,
 2026-09-21T20:51:04.128Z,hard-oneshot-opus,oneshot,opus,opus,9,8,0.889,8,0.889,0,0,5,0.889,true,,471,1.7388055000000002,776638,31511,684221,14,13,70998,549,0.2174,97080,

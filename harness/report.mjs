@@ -25,10 +25,16 @@ const all = readFileSync( LEDGER, 'utf8' ).split( '\n' ).filter( Boolean ).map( 
 // verification after the fact) appends a second row. Keep the newest per
 // run+arm: keying on the run name alone lets a stray run recorded under an
 // existing name silently replace a real result.
+// A run that changed no files is an aborted run, not a measurement. Recording
+// it is fine - losing a real result to it is not. Skip rows where nothing
+// happened so an abort can't supersede a completed run of the same arm.
+const aborted = all.filter( ( r ) => r.fixed === 0 && ! ( r.diff_lines > 1 ) );
+const usable = all.filter( ( r ) => ! aborted.includes( r ) );
+
 const latest = new Map();
-for ( const r of all ) latest.set( `${ r.run }::${ r.arm }`, r );
+for ( const r of usable ) latest.set( `${ r.run }::${ r.arm }`, r );
 const rows = [ ...latest.values() ];
-const superseded = all.length - rows.length;
+const superseded = usable.length - rows.length;
 
 const n = ( v, d = 0 ) => ( v === null || v === undefined ? '-' : Number( v ).toLocaleString( 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d } ) );
 const usd = ( v ) => ( v === null || v === undefined ? '-' : '$' + Number( v ).toFixed( 3 ) );
@@ -175,4 +181,4 @@ const phaseRows = rows.flatMap( ( r ) => ( r.phases || [] ).map( ( p ) => phaseC
 } ).join( ',' ) ) );
 writeFileSync( join( ROOT, 'results', 'phases.csv' ), [ phaseCols.join( ',' ), ...phaseRows ].join( '\n' ) + '\n' );
 
-console.log( `report: ${ rows.length } run(s)${ superseded ? `, ${ superseded } superseded` : '' } -> results/report.md, results.csv, phases.csv` );
+console.log( `report: ${ rows.length } run(s)${ superseded ? `, ${ superseded } superseded` : '' }${ aborted.length ? `, ${ aborted.length } aborted (skipped)` : '' } -> results/report.md, results.csv, phases.csv` );

@@ -78,7 +78,7 @@ if ( judge?.matched ) {
 }
 
 const diffPath = join( runDir, 'fix.diff' );
-const diffLines = existsSync( diffPath ) ? readFileSync( diffPath, 'utf8' ).split( '\n' ).length : null;
+const diffLines = existsSync( diffPath ) ? readFileSync( diffPath, 'utf8' ).split( '\n' ).filter( Boolean ).length : null;
 
 const totals = usage?.totals || {};
 const wallSeconds = ( usage?.phases || [] )

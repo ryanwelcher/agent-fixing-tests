@@ -17,7 +17,14 @@ cp -R "$SKILL" "$SANDBOX/.claude/skills/review-handoff"
 ( cd "$SANDBOX" && git init -q && git add -A \
   && git -c user.email=selftest@local -c user.name=selftest commit -qm "fixture" )
 
-cat > "$SANDBOX/.prompt.md" <<PROMPT
+# The prompt lives OUTSIDE the sandbox on purpose. The skill's preflight
+# refuses to run on a dirty tree, and an untracked .prompt.md sitting in the
+# repo is a dirty tree - the harness would be handing the skill a condition it
+# is designed to stop on, and the skill's own `git add -A` would commit it.
+PROMPT_FILE="$( mktemp "${TMPDIR:-/tmp}/wpem-skill-prompt-XXXXXX" )"
+trap 'rm -rf "$SANDBOX" "$PROMPT_FILE"' EXIT
+
+cat > "$PROMPT_FILE" <<PROMPT
 Use the review-handoff skill on \`./plugin\`.
 
 Reviewer model: $REVIEWER. Implementer model: $IMPLEMENTER.
@@ -27,7 +34,7 @@ Do not review and fix in one agent.
 PROMPT
 
 say "skill: reviewer=$REVIEWER implementer=$IMPLEMENTER run=$NAME"
-run_agent skill "$REVIEWER" "$SANDBOX/.prompt.md" "$SANDBOX" "$RUN"
+run_agent skill "$REVIEWER" "$PROMPT_FILE" "$SANDBOX" "$RUN"
 
 rm -rf "$RUN/plugin-fixed"
 cp -R "$SANDBOX/plugin" "$RUN/plugin-fixed"

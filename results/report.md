@@ -1,6 +1,6 @@
 # Two-model review handoff: results
 
-_Generated 2026-09-21 20:52 from 10 run(s) in `results/runs.jsonl` (5 superseded row(s) ignored)._
+_Generated 2026-09-23 18:51 from 10 run(s) in `results/runs.jsonl` (13 superseded row(s) ignored)._
 
 Fixture: `wp-event-manager`, a WordPress plugin with 76 deliberately seeded defects
 (22 critical, 32 high, 13 medium, 9 low). 75 are checked by deterministic regex detectors;
@@ -14,14 +14,14 @@ the defect is actually gone. Quote the verified number.
 
 | Arm | Reviewer | Implementer | Detector | Verified | Verified rate | Cost | Tokens | Wall | Cost/verified fix | Surface | Lint |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `handoff` | haiku | haiku | 35/75 | 31/75 | 41% | $0.709 | 3,130,483 | 12m03s | $0.023 | intact | pass |
-| `handoff` | opus | sonnet | 64/75 | 56/75 | 75% | $2.942 | 1,000,229 | 17m53s | $0.053 | intact | pass |
-| `handoff` | opus | haiku | 62/75 | 58/75 | 77% | $2.750 | 4,123,535 | 21m37s | $0.047 | intact | pass |
-| `handoff-review` | opus | sonnet | 58/75 | 52/75 | 69% | $2.899 | 1,015,464 | 19m29s | $0.056 | intact | pass |
-| `handoff-review` | opus | haiku | 63/75 | 60/75 | 80% | $3.230 | 3,616,472 | 20m04s | $0.054 | intact | pass |
-| `oneshot` | opus | opus | 69/75 | 67/75 | 89% | $2.885 | 1,490,744 | 16m25s | $0.043 | intact | pass |
-| `skill` | opus | sonnet | 62/75 | 57/75 | 76% | $4.243 | 1,077,360 | 21m29s | $0.074 | intact | pass |
-| `handoff` | opus | opus | 62/75 | 58/75 | 77% | $5.455 | 2,730,639 | 22m47s | $0.094 | intact | pass |
+| `handoff` | haiku | haiku | 35/75 | 31/75 | 41% | $0.709 | 3,130,483 | 9m02s | $0.023 | intact | pass |
+| `handoff` | opus | sonnet | 64/75 | 56/75 | 75% | $2.942 | 1,000,229 | 14m53s | $0.053 | intact | pass |
+| `handoff` | opus | haiku | 62/75 | 54/75 | 72% | $2.750 | 4,123,535 | 18m26s | $0.051 | intact | pass |
+| `handoff-review` | opus | sonnet | 58/75 | 53/75 | 71% | $2.899 | 1,015,464 | 15m05s | $0.055 | intact | pass |
+| `handoff-review` | opus | haiku | 63/75 | 57/75 | 76% | $3.230 | 3,616,472 | 16m24s | $0.057 | intact | pass |
+| `oneshot` | opus | opus | 69/75 | 65/75 | 87% | $2.885 | 1,490,744 | 11m52s | $0.044 | intact | pass |
+| `skill` | opus | sonnet | 58/75 | 54/75 | 72% | $3.766 | 928,721 | 15m51s | $0.070 | intact | pass |
+| `handoff` | opus | opus | 62/75 | 56/75 | 75% | $5.455 | 2,730,639 | 18m33s | $0.097 | intact | pass |
 | `handoff` | opus | sonnet | 9/9 | 9/9 | 100% | $1.887 | 824,047 | 11m11s | $0.210 | - | pass |
 | `oneshot` | opus | opus | 8/9 | 8/9 | 89% | $1.739 | 776,638 | 9m09s | $0.217 | - | pass |
 
@@ -31,83 +31,82 @@ Of the fixes the detectors passed, how many survive reading the code.
 
 | Arm | Implementer | Correct | Superficial | Removed feature | Uncertain | Regressions introduced | Detector overstated by |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `handoff` | haiku | 31 | 4 | 0 | 0 | 11 | 11% |
-| `handoff` | sonnet | 56 | 5 | 3 | 0 | 8 | 13% |
-| `handoff` | haiku | 58 | 3 | 1 | 0 | 12 | 6% |
-| `handoff-review` | sonnet | 52 | 5 | 1 | 0 | 8 | 10% |
-| `handoff-review` | haiku | 60 | 2 | 1 | 0 | 7 | 5% |
-| `oneshot` | opus | 67 | 2 | 0 | 0 | 5 | 3% |
-| `skill` | sonnet | 57 | 3 | 2 | 0 | 6 | 8% |
-| `handoff` | opus | 58 | 3 | 1 | 0 | 7 | 6% |
+| `handoff` | haiku | 31 | 4 | 0 | 0 | 10 | 11% |
+| `handoff` | sonnet | 56 | 6 | 2 | 0 | 8 | 13% |
+| `handoff` | haiku | 54 | 6 | 2 | 0 | 14 | 13% |
+| `handoff-review` | sonnet | 53 | 5 | 0 | 0 | 9 | 9% |
+| `handoff-review` | haiku | 57 | 5 | 1 | 0 | 4 | 10% |
+| `oneshot` | opus | 65 | 4 | 0 | 0 | 6 | 6% |
+| `skill` | sonnet | 54 | 3 | 1 | 0 | 6 | 7% |
+| `handoff` | opus | 56 | 5 | 1 | 0 | 6 | 10% |
 | `handoff` | sonnet | 9 | 0 | 0 | 0 | 6 | 0% |
 | `oneshot` | opus | 8 | 0 | 0 | 0 | 5 | 0% |
 
 ### Regressions the fix introduced
 
-- `handoff` — **high** `includes/class-event-admin.php:32` — "'custom_css' => wp_kses_allowed_html( $_POST['wpem_settings']['custom_css'], 'post' )" stores WordPress's allowed-tags array (not the CSS) in the option, so Custom CSS is destroyed on every save and wp_kses_post() on that array prints the literal "Array" plus an Array-to-string warning in <style> on every front-end page (class-event-shortcode.php:64) and in the settings textarea (admin/settings-page.php:23).
-- `handoff` — **high** `includes/class-event-admin.php:37` — "wp_safe_remote_get( admin_url( 'admin.php?page=wpem-settings' ) );" replaced wp_redirect() - saving settings no longer redirects (POST stays in history / resubmits) and instead fires a blocking server-side loopback HTTP request to wp-admin on every save.
-- `handoff` — **high** `public/js/frontend.js:11` — "nonce: jQuery('#wpem-nonce').val()" but wp_nonce_field( 'wpem_rsvp_nonce', 'nonce' ) at templates/event-single.php:27 renders id="nonce" - the selector never matches, an empty nonce is posted and check_ajax_referer() kills every RSVP with -1; public RSVP is completely broken.
-- `handoff` — **high** `admin/js/admin.js:5` — "nonce: jQuery('#wpem-delete-rsvp-nonce').val()" - no element with that id is rendered anywhere in the plugin, so wpemDeleteRsvp() always fails check_ajax_referer() and RSVP deletion never works.
-- `handoff` — **medium** `public/js/frontend.js:29` — "&nonce=' + jQuery('#wpem-search-nonce').val()" - that field is never rendered, so the search request always sends nonce=undefined and dies at check_ajax_referer(); the handler additionally now requires manage_options, so the front-end search box can never work.
-- `handoff` — **medium** `includes/class-event-admin.php:97` — "if ( ! in_array( $file['type'], $allowed_types, true ) )" validates the client-supplied MIME header from $_FILES, which an attacker sets freely - it is not real file-type validation (wp_check_filetype_and_ext() is); the nonce/capability checks are what actually protect the importer.
-- `handoff` — **low** `includes/class-event-admin.php:68` — export() now requires "check_admin_referer( 'wpem_export_nonce', 'wpem_nonce' )" but nothing in the plugin generates an export URL carrying that nonce, so the CSV export is unreachable from any UI and any existing bookmark wp_die()s.
-- `handoff` — **low** `includes/class-event-cpt.php:40` — "current_user_can( 'edit_posts' ) || wp_die();" aborts the whole save_post request with a bare wp_die for any programmatic/low-cap save of an event, and the generic edit_posts cap is not the per-post edit_post( $post_id ) check; the meta box still has no nonce.
-- `handoff` — **low** `templates/event-single.php:2` — "$event_id = intval( $_GET['event_id'] );" has no isset() guard, so a request without event_id raises an undefined-key warning and then hard-stops the page with wp_die( 'Event not found' ) (untranslated) instead of rendering.
-- `handoff` — **low** `includes/functions.php:47` — wpem_current_url() now always returns admin_url( 'admin.php?page=wpem-settings' ) - the helper no longer returns the current URL, it just happens to look right on the one page that calls it.
-- `handoff` — **low** `includes/class-event-admin.php:123` — "$status = isset( $cols[2] ) ? sanitize_text_field( $cols[2] ) : 'yes';" is parsed and then never passed to WPEM_DB::add_rsvp() on line 127, so an imported CSV's status column is silently discarded and every row is stored as 'yes'.
-- `handoff` — **high** `plugin/includes/class-event-admin.php:84` — The date field changed from type="text" to '<input type="datetime-local" id="wpem_date" name="wpem_date" value="%s" />', but stored _wpem_date values are free-form strings (everything else parses them with strtotime()); any value not in YYYY-MM-DDTHH:MM renders as an empty control and the next save writes it away, because class-event-cpt.php:57 stores whatever is posted whenever isset($_POST['wpem_date']) - silent loss of existing event dates.
-- `handoff` — **high** `plugin/wp-event-manager.php:50` — The legacy-table rename ('RENAME TABLE {$legacy} TO {$table}') only runs from register_activation_hook, which does not fire on an in-place plugin update, so an upgraded site keeps its unprefixed wpem_rsvps table while class-event-db.php:7 now queries $wpdb->prefix.'wpem_rsvps' - every RSVP read/write silently hits a missing table until the plugin is deactivated and reactivated.
-- `handoff` — **medium** `plugin/includes/class-event-shortcode.php:11` — shortcode_atts() was reduced to array( 'limit' => 10 ) and 'category_name' dropped from the query, so existing [events category="..."] shortcodes now silently list every event instead of the filtered set.
-- `handoff` — **medium** `plugin/uninstall.php:17` — 'do { $posts = get_posts(...); foreach ... wp_delete_post( $post_id, true ); } while ( ! empty( $posts ) );' never terminates if a deletion is blocked (e.g. a pre_delete_post filter), hanging the uninstall request; and because 'post_status' => 'any' excludes trash, the events the new cron wp_trash_post()s are left in the database forever.
-- `handoff` — **low** `plugin/includes/class-event-admin.php:123` — export() now requires check_admin_referer( 'wpem_export' ) but nothing in the plugin ever generates an export URL carrying _wpnonce, so the CSV export is only reachable by hand-crafting a nonced link.
-- `handoff` — **low** `plugin/admin/js/admin.js:22` — The attendee search moved out of frontend.js into admin.js behind the wpem_admin nonce, but the settings page renders no #wpem-search or #wpem-results markup and admin.js only loads on that page - the search feature is now unreachable dead code.
-- `handoff` — **low** `plugin/admin/settings-page.php:51` — '<h2>Integration</h2>' is left with no body after the API-key paragraph was deleted, and wpem_get_ticket_api_key() (functions.php:28) has no callers and no UI to populate wpem_ticket_api_key, so the ticketing integration is unconfigurable.
-- `handoff` — **low** `plugin/includes/class-event-cpt.php:54` — 'update_post_meta( $post_id, '_wpem_price', (float) wp_unslash( $_POST['wpem_price'] ) )' coerces previously free-text prices, so a stored '10.00 USD' becomes 10 and a comma-decimal '10,50' becomes 10 on the next save.
-- `handoff` — **medium** `plugin/includes/class-event-admin.php:115` — get_rsvps() gained a '$limit = 500' default, so 'WPEM_DB::get_rsvps( $event_id )' now silently truncates the CSV export (and REST /attendees, and the single-event attendee list) at 500 rows with no warning or pagination.
-- `handoff` — **medium** `plugin/uninstall.php:15` — The loop force-deletes posts while paging over them ('paged' => $paged with wp_delete_post($id, true)), so the result set shifts under the offset and roughly half the events survive uninstall - events 201-400 are skipped after page 1 deletes 1-200.
-- `handoff` — **medium** `plugin/includes/class-event-cron.php:43` — Cleanup no longer deletes RSVP rows at all (the 'foreach ( $rsvps as $rsvp ) WPEM_DB::delete_rsvp(...)' block was dropped), so attendee rows - including email PII that used to be purged - accumulate forever and are orphaned once the trashed event is emptied.
-- `handoff` — **medium** `plugin/includes/class-event-shortcode.php:79` — "echo '<style id=\"wpem-custom-css\">' . esc_html( wp_strip_all_tags( $css ) ) . '</style>'" - esc_html inside <style> is not decoded by browsers, so any saved CSS using a child selector ('>' becomes '&gt;') or '&' (media queries, nesting) is now broken.
-- `handoff` — **medium** `plugin/public/js/frontend.js:30` — 'resultsEl.innerHTML = '';' - the search box still fires an AJAX request on every keyup but the results are never rendered; the front-end search feature now does nothing.
-- `handoff` — **medium** `plugin/includes/class-event-rest.php:144` — update_settings() reads '$request->get_json_params()', which is null for a form-encoded or query-string POST, so a valid non-JSON request to /wpem/v1/settings saves nothing yet still returns {"saved":true}; it also bypasses the sanitize_callbacks declared in the route args.
-- `handoff` — **low** `plugin/includes/class-event-rest.php:52` — "'validate_callback' => 'is_email'" - REST calls validators as callback($value, $request, $param), and is_email()'s second parameter is $deprecated, so every /rsvp request triggers a _deprecated_argument() notice.
-- `handoff` — **low** `plugin/public/js/frontend.js:25` — The front-end search sends 'wpemData.nonce' (created for the 'wpem_rsvp' action) to wpem_search, which calls check_ajax_referer( 'wpem_admin', 'nonce' ) and also now requires edit_posts - the request can never succeed.
-- `handoff` — **low** `plugin/includes/class-event-admin.php:101` — 'if ( in_array( $value[0], ... ) )' dereferences offset 0 without checking length, raising an 'Uninitialized string offset 0' warning in PHP 8 for any empty name/email/status cell during export.
-- `handoff` — **low** `plugin/wp-event-manager.php:57` — '$wpdb->query( "INSERT INTO {$new_table} SELECT * FROM wpem_rsvps" );' - return value unchecked and wpem_migrated_to_prefix is set regardless, so a failed migration (e.g. rows longer than the new VARCHAR(191) under strict mode) is recorded as done and never retried; the old table is also left behind.
-- `handoff` — **low** `plugin/includes/class-event-cron.php:17` — Same paging-while-mutating bug as uninstall: events are trashed inside a loop paging over 'post_status' => 'publish', so each run skips up to 50 expired events per page boundary (self-heals over later hourly runs).
-- `handoff` — **low** `plugin/includes/class-event-admin.php:112` — export() now requires check_admin_referer( 'wpem_export' ), but nothing in the plugin renders an export link carrying that nonce, so the CSV export is unreachable from the UI.
-- `handoff-review` — **medium** `plugin/templates/event-single.php:1` — The whole templates/ directory was deleted rather than fixed ('Only in .../plugin: templates' in fix.diff) - it held the single-event template with the RSVP form markup (.wpem-rsvp-form, #wpem-name, #wpem-email, .wpem-message) that public/js/frontend.js and public/css/style.css still target, plus the attendee list; no claim covers that file, and a theme that included it now includes a missing file.
-- `handoff-review` — **low** `plugin/includes/functions.php:41` — 'return home_url( add_query_arg( array(), $wp->request ) );' - $wp->request is null in wp-admin (parse_request never runs), so the only caller, admin/settings-page.php:45 'Current page:', now prints the site home URL instead of the current admin URL and passes null into add_query_arg(), which trips PHP 8.1+ deprecation notices.
-- `handoff-review` — **medium** `plugin/includes/class-event-cron.php:58` — 'wp_delete_post( $event->ID, false );' trashes the event as recoverable, but lines 54-56 have already permanently deleted its RSVP rows - restoring a trashed event now brings back an event whose attendee list is irrecoverably gone, and readme.txt advertises this as 'expired events go to the trash'.
-- `handoff-review` — **low** `plugin/uninstall.php:25` — "'post_status' => 'any'" excludes trashed posts, so the events the new cron trashes (class-event-cron.php:58) are left behind in the database after uninstall - the old force-delete cron plus force-delete uninstall left nothing.
-- `handoff-review` — **low** `plugin/uninstall.php:22` — 'do { ... } while ( $query->posts );' re-runs the same query until it returns nothing; if any returned post fails to delete (e.g. a plugin short-circuits pre_delete_post), the same 200 ids come back forever and uninstall hangs until the PHP timeout. The previous code queried once.
-- `handoff-review` — **low** `plugin/includes/class-event-cpt.php:26` — "'show_in_rest' => true" was added to register_post_type, which switches the Event editor from classic to the block editor and exposes /wp/v2/event - a user-visible change no claim asked for (meta box saving still works via the block editor's compat form).
-- `handoff-review` — **low** `plugin/admin/js/admin.js:22` — The newly added search handler binds to '#wpem-search' and writes to '#wpem-results', but nothing in the plugin renders those elements (admin/settings-page.php has no search field) and the previous front-end consumer was deleted - the wpem_search endpoint is now unreachable from any shipped UI.
-- `handoff-review` — **low** `plugin/includes/class-event-rest.php:50` — GET /wpem/v1/events now returns 20 events by default instead of every event; existing API consumers that relied on the unpaginated response silently get a truncated list (no total/pagination headers are sent).
-- `handoff-review` — **medium** `includes/class-event-ajax.php:65` — Nonce action mismatch breaks the search endpoint: the handler calls check_ajax_referer( 'wpem_admin', 'nonce' ) but the only caller, public/js/frontend.js:28, sends 'nonce: wpemFront.nonce' created with wp_create_nonce( 'wpem_frontend' ), so every request dies with -1 even for an administrator.
-- `handoff-review` — **low** `includes/class-event-admin.php:102` — export() now requires check_admin_referer( 'wpem_export' ) but no screen renders a wpem_export link or nonce anywhere in the plugin, so CSV export is unreachable for legitimate admins.
-- `handoff-review` — **low** `uninstall.php:17` — The new 'do { ... } while ( ! empty( $posts ) );' batch loop never breaks on failure - if wp_delete_post( $post_id, true ) is blocked (e.g. a before_delete_post hook) get_posts keeps returning the same 200 ids and uninstall spins until the PHP timeout.
-- `handoff-review` — **low** `wp-event-manager.php:53` — 'PRIMARY KEY (id),' uses a single space; dbDelta requires two spaces after PRIMARY KEY, so on re-activation dbDelta emits a redundant ADD PRIMARY KEY and a 'Multiple primary key defined' DB error.
-- `handoff-review` — **low** `includes/class-event-cron.php:16` — 'posts_per_page' => 100 caps the hourly cleanup at 100 events per run with no repeat scheduling, so a site with a large backlog of past events now clears it far more slowly than the previous -1 sweep.
-- `handoff-review` — **low** `includes/functions.php:41` — home_url( add_query_arg( array() ) ) concatenates the full REQUEST_URI onto the home URL, so on a subdirectory install it returns https://example.com/blog/blog/page - wrong URL (currently harmless: the function has no callers left).
-- `handoff-review` — **low** `includes/class-event-rest.php:98` — The /settings route declares no args schema, so an array-valued custom_css reaches wp_strip_all_tags( $request['custom_css'] ) and throws a TypeError from strip_tags() on PHP 8 (admin-only 500).
-- `oneshot` — **low** `plugin/public/js/frontend.js:18` — The error branch "} else if ( response && response.data && response.data.message ) {" is unreachable: wp_send_json_error( ..., 400 ) sets an HTTP 400/403/500 status, so jQuery routes the response to its fail handler and never calls this success callback - a visitor who submits a bad name/email gets silence instead of the message the code intends to show.
-- `oneshot` — **low** `plugin/includes/class-event-admin.php:51` — "wp_strip_all_tags( $submitted['custom_css'] )" (and sanitize_email on line 50) is called on a value only known to be an element of an array - posting wpem_settings[custom_css][]=x raises a PHP 8 TypeError and fatals the settings save; previously the array was stored without error. Needs an authenticated admin plus a valid nonce, so it is self-inflicted only.
-- `oneshot` — **low** `plugin/templates/event-single.php:30` — "echo wp_kses_post( apply_filters( 'the_content', $wpem_event->post_content ) );" runs kses over already-filtered output, so oEmbed/iframe embeds (not in $allowedposttags) are stripped from event bodies that rendered fine before - a visible content change on pages with embedded video or maps.
-- `oneshot` — **low** `plugin/includes/functions.php:56` — "return home_url( add_query_arg( array() ) );" doubles the subdirectory segment on subdirectory installs, because home_url() already contains the path that REQUEST_URI repeats. No impact today - the settings-page call site was deleted in the same change, leaving the helper unused - but the helper is wrong for the next caller.
-- `oneshot` — **low** `plugin/uninstall.php:22` — The "do { ... } while ( count( $wpem_post_ids ) === 200 );" batch loop relies on wp_delete_post() actually removing each post to make progress; if a deletion is blocked (e.g. a plugin short-circuits pre_delete_post) the same 200 ids are fetched forever and uninstall hangs. Also, post_status 'any' excludes trashed events, so they are left behind.
-- `skill` — **medium** `plugin/includes/class-event-shortcode.php:74` — echo '<style>' . esc_html( wp_strip_all_tags( $css ) ) . '</style>'; - CSS does not decode HTML entities, so any custom CSS using a child combinator or quotes now renders as '.a &gt; .b { content: &quot;x&quot;; }' and silently stops applying.
-- `skill` — **medium** `plugin/includes/class-event-cron.php:40` — cleanup() dropped the 'foreach ( $rsvps as $rsvp ) { WPEM_DB::delete_rsvp( $rsvp->id ); }' loop, so RSVP rows (names and emails) are never removed when an event is cleaned up - orphaned PII now accumulates in wpem_rsvps forever.
-- `skill` — **low** `plugin/includes/class-event-cron.php:40` — wp_delete_post( $event->ID, true ) became 'wp_trash_post( $event_id );' - past events now pile up in the Trash instead of disappearing, a visible change for anyone relying on the old behaviour.
-- `skill` — **low** `plugin/includes/class-event-cron.php:22` — 'posts_per_page' => 100 caps cleanup at 100 events per hourly run with no ordering or offset, so a site with a large backlog of past events drains it only 100 per hour.
-- `skill` — **low** `plugin/wp-event-manager.php:61` — 'PRIMARY KEY (id),' is passed to dbDelta() with a single space; dbDelta's documented parser needs two, so re-running activation can emit a duplicate ADD PRIMARY KEY and a MySQL error on upgrade.
-- `skill` — **low** `plugin/templates` — fix.diff line 1022 'Only in .../plugin: templates' - the entire templates/ directory was deleted; no claim covers it and nothing in the fixed tree references it, so it is silent scope creep rather than a crash.
-- `handoff` — **medium** `includes/class-event-shortcode.php:62` — esc_html( format_event_date( strtotime( (string) $date ) ) ) - WordPress forces PHP's default timezone to UTC, so strtotime() reads the naive '_wpem_date' string as UTC and wp_date() then shifts it into the site timezone; an event saved as 18:00 renders as 14:00 on a UTC-5 site, where the old date() call showed 18:00.
-- `handoff` — **medium** `includes/class-event-admin.php:88` — The date field changed to 'type="datetime-local"', which renders empty for any previously stored value not in YYYY-MM-DDTHH:MM form; re-saving then posts an empty string and class-event-cpt.php:63 stores '' (strtotime false), silently wiping the event date.
-- `handoff` — **medium** `public/js/frontend.js:28` — $.get( wpemAdmin.ajaxUrl, { ... nonce: wpemAdmin.nonce ... } ) sits in the frontend bundle, but only 'wpemFront' is localized for the wpem-frontend handle, so the search handler throws 'ReferenceError: wpemAdmin is not defined' the moment a #wpem-search element exists on the front end.
-- `handoff` — **medium** `templates/event-single.php:18` — wp_kses_post( apply_filters( 'the_content', $event->post_content ) ) runs kses after the filters, stripping markup WordPress itself generated - oEmbed <iframe>s and shortcode-emitted <script>/<iframe> vanish from event content.
-- `handoff` — **low** `includes/class-event-admin.php:43` — sanitize_email( $posted['notify_email'] ) / wp_strip_all_tags( $posted['custom_css'] ) receive whatever shape was posted; an admin submitting wpem_settings[notify_email][]=x passes an array and fatals with a PHP 8 TypeError instead of being rejected.
-- `handoff` — **low** `uninstall.php:31` — 'paged' => $paged with $paged never incremented - the do/while only terminates because the posts are force-deleted, so a single post whose deletion is blocked by a filter makes uninstall spin forever.
-- `handoff` — **low** `templates/event-single.php:26` — Price output changed from 'Price: $<price>' to number_format_i18n( (float) $price, 2 ) with no currency symbol, so '$25' now renders as '25.00'.
+- `handoff` — **high** `plugin/includes/class-event-admin.php:32` — 'custom_css' => wp_kses_allowed_html( $_POST[...]['custom_css'], 'post' ) stores the kses allowed-tags ARRAY instead of the CSS. Every settings save destroys custom CSS, and styles() / the settings textarea then echo an array ('Array' plus an Array-to-string warning on every front-end page).
+- `handoff` — **high** `plugin/public/js/frontend.js:11` — nonce: jQuery('#wpem-nonce').val() reads an element that does not exist; wp_nonce_field('wpem_rsvp_nonce','nonce') renders id="nonce". check_ajax_referer therefore fails and every front-end RSVP is rejected with -1.
+- `handoff` — **medium** `plugin/includes/class-event-admin.php:37` — wp_redirect() was replaced with wp_safe_remote_get( admin_url(...) ). That is a server-side loopback HTTP request, not a redirect: the POST is never redirected (form resubmits on refresh) and every save fires a useless outbound request.
+- `handoff` — **medium** `plugin/admin/js/admin.js:5` — nonce: jQuery('#wpem-delete-rsvp-nonce').val() reads an element no PHP code outputs, so RSVP deletion always fails the nonce check.
+- `handoff` — **medium** `plugin/public/js/frontend.js:29` — '&nonce=' + jQuery('#wpem-search-nonce').val() reads an element that is never rendered, and the handler now also requires manage_options, so the public #wpem-search box always returns -1.
+- `handoff` — **medium** `plugin/includes/class-event-admin.php:68` — check_admin_referer( 'wpem_export_nonce', 'wpem_nonce' ) is added, but nothing in the plugin generates an export URL with that nonce, so the CSV export can no longer be used at all.
+- `handoff` — **low** `plugin/includes/class-event-cpt.php:40` — current_user_can( 'edit_posts' ) || wp_die() inside a save_post callback kills any request that saves an event on behalf of a user without edit_posts (e.g. front-end or programmatic inserts). It also checks the generic cap instead of edit_post for $post_id, and there is no meta-box nonce.
+- `handoff` — **low** `plugin/includes/class-event-admin.php:97` — The import type check relies on the client-supplied $file['type'] with a strict text/csv|text/plain allowlist. Browsers that send application/vnd.ms-excel for .csv (common on Windows) are rejected, and the check is trivially spoofable.
+- `handoff` — **low** `plugin/includes/functions.php:41` — wpem_remote_events() now expects JSON instead of PHP-serialized data, so any existing endpoint that returns serialized data silently yields array().
+- `handoff` — **low** `plugin/includes/functions.php:47` — wpem_current_url() now always returns the settings-page admin URL instead of the current request URL, which changes behaviour for any caller.
+- `handoff` — **medium** `plugin/includes/class-event-admin.php:84` — Meta box date field changed to type="datetime-local"; existing values stored as 'Y-m-d H:i' (space, not 'T') are invalid for that input, so the browser shows it blank and the next save writes '' over the event date (isset( $_POST['wpem_date'] ) is true).
+- `handoff` — **medium** `plugin/includes/class-event-cron.php:17` — Cleanup now fetches only the first 100 published events with a date (default order: newest post first) and filters past dates in PHP; on sites with 100+ current events, older past events are never reached and never cleaned up.
+- `handoff` — **medium** `plugin/includes/class-event-admin.php:123` — export() now requires check_admin_referer( 'wpem_export' ), but no code anywhere emits a wp_nonce_url/nonce for admin-post.php?action=wpem_export, so the CSV export can no longer be used by anyone, admins included.
+- `handoff` — **low** `plugin/includes/class-event-admin.php:54` — Price saved as (float) wp_unslash( $_POST['wpem_price'] ): inputs like '$10' or 'Free' silently become 0.
+- `handoff` — **low** `plugin/uninstall.php:20` — 'post_status' => 'any' leaves out 'trash', and cleanup now trashes past events (wp_trash_post), so those trashed events are left behind after uninstall.
+- `handoff` — **low** `plugin/includes/class-event-shortcode.php:11` — The shortcode's 'category' attribute was dropped from shortcode_atts, so an existing [events category="..."] silently ignores it and lists all events.
+- `handoff` — **low** `plugin/includes/class-event-db.php:10` — Sorting by ?orderby= is gone: callers (export, REST attendees) never pass $orderby, so results always sort by created DESC.
+- `handoff` — **low** `plugin/public/js/frontend.js:22` — The public #wpem-search handler was removed and the nopriv search hook deleted; the replacement in admin.js only loads on the settings page, which has no #wpem-search or #wpem-results element, so search has no working UI anywhere.
+- `handoff` — **high** `plugin/includes/class-event-db.php:11` — Every query now targets `$wpdb->prefix . 'wpem_rsvps'`, but the table is only created and migrated in wpem_activate(). An in-place plugin update does not fire activation, and wpem_db_version is written but never checked, so existing sites lose all RSVPs and get DB errors until reactivation.
+- `handoff` — **medium** `plugin/includes/class-event-cpt.php:63` — `gmdate( 'Y-m-d H:i:s', strtotime( ... ) )` stores the admin's local wall-clock time as if it were UTC, and format_event_date() now renders it through wp_date() in the site timezone. Displayed event times shift by the site's UTC offset.
+- `handoff` — **medium** `plugin/public/js/frontend.js:24` — Front-end search sends `nonce: wpemData.nonce` (action 'wpem_rsvp') but the handler runs `check_ajax_referer( 'wpem_admin', 'nonce' )` (class-event-ajax.php:71) and is now logged-in/edit_posts only. Front-end search always fails, and line 30 discards the results anyway (`resultsEl.innerHTML = '';`).
+- `handoff` — **medium** `plugin/includes/class-event-shortcode.php:79` — `esc_html( wp_strip_all_tags( $css ) )` inside <style> turns quotes and `>` into entities, so valid custom CSS such as `font-family: "Open Sans"` or `ul > li` breaks.
+- `handoff` — **medium** `plugin/includes/class-event-rest.php:99` — GET /events changed from all events to 10 by default, and sends no X-WP-Total/X-WP-TotalPages headers. Existing clients silently receive a truncated list and cannot discover more pages.
+- `handoff` — **medium** `plugin/includes/class-event-rest.php:144` — `$raw = $request->get_json_params();` ignores form-encoded or query params. Such requests change nothing yet still return `{ saved: true }`.
+- `handoff` — **medium** `plugin/uninstall.php:22` — Pages with `'paged' => $paged` while deleting the previous page, so the offset skips the rows that shifted up. Sites with more than 200 events are left with undeleted events after uninstall.
+- `handoff` — **low** `plugin/includes/class-event-cron.php:22` — Same paged-while-trashing pattern: trashed events drop out of the 'publish' set, so each run skips some expired events.
+- `handoff` — **low** `plugin/includes/class-event-cron.php:43` — Cleanup no longer deletes RSVPs. When trash is emptied, wp_delete_post never touches the custom table, which leaves orphaned attendee name/email rows forever.
+- `handoff` — **low** `plugin/wp-event-manager.php:57` — `INSERT INTO {$new_table} SELECT * FROM wpem_rsvps` copies the shared unprefixed table into every site/install that activates, including other installs' RSVPs. Duplicate ids fail silently and the legacy table is never dropped (uninstall ignores it).
+- `handoff` — **low** `plugin/wp-event-manager.php:46` — `PRIMARY KEY (id),` has one space. dbDelta requires two, so every re-activation tries to re-add the primary key and logs a DB error.
+- `handoff` — **low** `plugin/includes/class-event-admin.php:101` — `in_array( $value[0], ...)` on an empty name/email/status raises an 'Uninitialized string offset 0' warning in the CSV export.
+- `handoff` — **low** `plugin/includes/class-event-rest.php:134` — POST /rsvp response changed from a bare integer id to `{ id: n }`. The AJAX rsvp response also moved the id to `data.id`, which breaks existing API consumers.
+- `handoff` — **low** `plugin/uninstall.php:9` — The removed `delete_option( 'wpem_visits' )` means upgraded sites keep that option after uninstall. The new `wpem_migrated_to_prefix` option is never deleted either.
+- `handoff-review` — **high** `plugin/includes/class-event-db.php:10` — Table renamed from 'wpem_rsvps' to $wpdb->prefix.'wpem_rsvps' with no upgrade/migration path: activation hook doesn't run on plugin update and 'wpem_db_version' is written but never checked, so on existing installs every RSVP query hits a non-existent table and existing RSVP data is orphaned in the old table.
+- `handoff-review` — **medium** `plugin/includes/class-event-cron.php:41` — cleanup() get_posts( 'post_status' => 'publish', 'posts_per_page' => 100 ) orders by post date DESC with no meta/date filter, so on sites with >100 published events, expired events outside the newest 100 are never cleaned up.
+- `handoff-review` — **medium** `plugin/includes/class-event-ajax.php:17` — Anonymous RSVP now requires check_ajax_referer( 'wpem_rsvp', 'nonce' ) with a nonce localized into the page; on full-page-cached sites the cached nonce expires (12-24h) and every visitor RSVP fails with -1/403.
+- `handoff-review` — **low** `plugin/public/js/frontend.js:24` — Public '#wpem-search' attendee search removed from frontend and moved to admin.js, but no admin screen renders #wpem-search/#wpem-results markup, so the search UI is now dead code everywhere (visible behaviour change for sites that used it).
+- `handoff-review` — **low** `plugin/includes/functions.php:36` — wpem_current_url() now returns home_url( $wp->request ); in wp-admin $wp->request is empty, so the settings page 'Current page:' line shows the site home URL instead of the current page, and query strings are dropped.
+- `handoff-review` — **low** `plugin/uninstall.php:22` — Uninstall loop queries 'post_status' => 'any', which excludes 'trash'; since cron now trashes expired events, those trashed events survive uninstall. The do/while also loops forever if wp_delete_post() ever fails for a returned ID.
+- `handoff-review` — **low** `plugin/includes/class-event-cpt.php:26` — 'show_in_rest' => true added to the event CPT: switches event editing to the block editor and exposes events at /wp/v2/event, an unrequested behaviour change.
+- `handoff-review` — **low** `plugin/includes/class-event-cron.php:21` — track_visit() now buffers in a transient and flushes every 20 hits (non-atomic, lost if the transient expires); the wpem_visits count is now approximate and lags.
+- `handoff-review` — **low** `plugin/templates` — diff reports 'Only in plugin: templates' - the templates/ directory was deleted without showing its contents; nothing in the current code references it, but any site/theme overriding or including those templates would break.
+- `handoff-review` — **medium** `plugin/public/js/frontend.js:25` — Front-end search is now dead for everyone. It sends 'nonce: wpemFront.nonce' (action 'wpem_frontend'), but the handler runs check_ajax_referer( 'wpem_admin', 'nonce' ) (class-event-ajax.php:65) and needs manage_options, and the nopriv hook is gone. So every request returns -1 or 403, admins included.
+- `handoff-review` — **medium** `plugin/includes/class-event-cron.php:16` — Cleanup now handles only the first 100 events ('posts_per_page' => 100, default order post_date DESC) and does not filter by event date. On sites with more than 100 events, the older past events are never reached, so they are never cleaned up.
+- `handoff-review` — **low** `plugin/uninstall.php:17` — do/while re-queries get_posts until it comes back empty. If wp_delete_post() fails for any post, the same IDs come back every time and uninstall loops forever. Trashed events are also skipped, because 'any' excludes trash.
+- `handoff-review` — **low** `plugin/templates/event-single.php:23` — The currency symbol was dropped. The old 'Price: $<?php echo $price; ?>' is now 'Price: %s', so visitors see 'Price: 20' instead of 'Price: $20'.
+- `oneshot` — **medium** `plugin/includes/class-event-cron.php:37` — cleanup() always fetches the same first 100 published events (`'numberposts' => self::CLEANUP_BATCH`, no date filter/offset); once >100 upcoming events exist, older past events are never reached, so cleanup silently stops working.
+- `oneshot` — **medium** `plugin/uninstall.php:25` — `'post_status' => 'any'` excludes trash, and the fix switched cron to `wp_trash_post()`, so every auto-trashed event is left behind after uninstall; also if wp_delete_post() fails for a full batch the do/while re-fetches the same 200 IDs forever.
+- `oneshot` — **low** `plugin/includes/class-event-ajax.php:82` — wpem_search is now manage_options-only (nopriv hook removed) but public/js/frontend.js:24 still calls it from the front end, so the visitor-facing search always returns 403 - a user-visible feature silently broken rather than restricted in the UI.
+- `oneshot` — **low** `plugin/includes/class-event-rest.php:161` — POST /wpem/v1/rsvp response changed from a bare integer (`return WPEM_DB::add_rsvp(...)`) to `{ "id": n }` and now 400s for non-published events - breaking change for existing API clients.
+- `oneshot` — **low** `plugin/includes/class-event-ajax.php:23` — `check_ajax_referer( 'wpem_ajax', 'nonce' )` on the nopriv RSVP handler: logged-out nonces embedded in full-page-cached event pages expire after 12-24h, after which every anonymous RSVP fails with -1/403.
+- `oneshot` — **low** `plugin/includes/class-event-db.php:68` — `created` now stored as UTC (`current_time( 'mysql', true )`) where it used to be server-local NOW(); existing rows and new rows are on different clocks, affecting ORDER BY created and any display.
+- `skill` — **high** `plugin/includes/class-event-db.php:10` — Table renamed from 'wpem_rsvps' to "$wpdb->prefix . 'wpem_rsvps'" with no upgrade routine. The activation hook does not run on plugin update, so existing installs query a missing table, and every existing RSVP is orphaned in the old table.
+- `skill` — **low** `plugin/uninstall.php:11` — "DROP TABLE IF EXISTS ' . $wpdb->prefix . 'wpem_rsvps'" never drops the legacy unprefixed wpem_rsvps table that existing installs created, so attendee PII is left behind after uninstall.
+- `skill` — **medium** `plugin/wp-event-manager.php:83` — Front-end search now only works for admins: "'searchNonce' => current_user_can( 'manage_options' ) ? wp_create_nonce( 'wpem_search' ) : ''" and the nopriv hook is removed, so the public #wpem-search box in frontend.js silently returns -1/403 for visitors. This is an intended PII fix, but users will see the behaviour change.
+- `skill` — **low** `plugin/includes/class-event-cpt.php:26` — New "'taxonomies' => array( 'category' )" attaches core categories to the event CPT, which changes the admin UI and category counts.
+- `skill` — **low** `plugin/templates/event-single.php:4` — "isset( $_GET['event_id'] ) ? absint( $_GET['event_id'] ) : get_the_ID()": a non-numeric event_id gives 0, get_post(0) falls back to the global post and passes the type check, but meta and attendees are then looked up for ID 0 and render empty.
+- `skill` — **low** `plugin/includes/class-event-admin.php:162` — CSV import calls WPEM_DB::add_rsvp() directly, bypassing the new has_rsvp() duplicate check in wpem_create_rsvp(), so re-importing a file duplicates rows even though the AJAX/REST paths now reject duplicates.
+- `handoff` — **high** `plugin/wp-event-manager.php:47` — Table renamed from unprefixed `wpem_rsvps` to `$wpdb->prefix . 'wpem_rsvps'` with no migration. Existing RSVPs are orphaned on upgrade (the new table is only created on reactivation, so until then every query fails), and uninstall.php no longer drops the old table.
+- `handoff` — **medium** `plugin/includes/class-event-shortcode.php:62` — format_event_date( strtotime( (string) $date ) ) now goes through wp_date(). strtotime() parses the site-local datetime-local value as UTC, so every displayed event time is shifted by the site's UTC offset. The old date() showed the entered time.
+- `handoff` — **low** `plugin/public/js/frontend.js:28` — The front-end search handler references `wpemAdmin.ajaxUrl`, but wpemAdmin is only localized on admin screens. On the front end this throws a ReferenceError on keyup, so public search is silently broken (the nopriv search endpoint was also removed).
+- `handoff` — **low** `plugin/includes/class-event-shortcode.php:14` — The shortcode's `event_search` feature ('Showing results for: ...') was removed without mention. Users of ?event_search lose that behaviour.
+- `handoff` — **low** `plugin/templates/event-single.php:18` — wp_kses_post( apply_filters( 'the_content', ... ) ) strips the <iframe> that oEmbed produces, so embedded videos and maps in event content disappear.
+- `handoff` — **low** `plugin/includes/class-event-cron.php:14` — Cleanup fetches any 100 events with no date filter or ordering. With more than 100 future events, past events may never be reached.
 - `handoff` — **medium** `wp-member-directory.php:37` — `if ( get_option( 'mdir_db_version' ) !== MDIR_VERSION )` runs dbDelta from plugins_loaded, so front-end visitors load wp-admin/includes/upgrade.php and race to ALTER the table, and `update_option( 'mdir_db_version', MDIR_VERSION )` records success even when dbDelta's ALTER failed.
 - `handoff` — **medium** `includes/class-mdir-directory.php:32` — The transient key is now `md5()` over the attacker-controlled `$_GET['mdir_q']`, so requests with random search terms create unbounded 15-minute transients (wp_options bloat) where the old code used one fixed key.
 - `handoff` — **medium** `includes/class-mdir-booking.php:47` — With the new `UNIQUE KEY event_user`, a second booking by the same member fails on duplicate key, `$wpdb->query()` returns false, and `if ( 1 !== $inserted )` reports "This event is full." — a wrong message, and on upgraded tables that already contain duplicate rows dbDelta cannot add the index at all, so the guarantee silently does not apply.
@@ -130,7 +129,7 @@ Of the fixes the detectors passed, how many survive reading the code.
 | `handoff-review` | matrix-handoff-review-sonnet | 18/21 | 27/32 | 8/13 | 5/9 |
 | `handoff-review` | matrix-handoff-review-haiku | 19/21 | 27/32 | 9/13 | 8/9 |
 | `oneshot` | matrix-oneshot-opus | 20/21 | 31/32 | 10/13 | 8/9 |
-| `skill` | matrix-skill | 19/21 | 28/32 | 8/13 | 7/9 |
+| `skill` | matrix-skill | 18/21 | 27/32 | 9/13 | 4/9 |
 | `handoff` | matrix-handoff-opus | 19/21 | 28/32 | 8/13 | 7/9 |
 | `handoff` | hard-handoff-sonnet | 3/3 | 5/5 | 1/1 | - |
 | `oneshot` | hard-oneshot-opus | 3/3 | 4/5 | 1/1 | - |
@@ -145,7 +144,7 @@ Of the fixes the detectors passed, how many survive reading the code.
 | `handoff-review` | matrix-handoff-review-sonnet | 1/3 | 6/11 | 1/1 | 3/4 | 37/44 | 10/12 |
 | `handoff-review` | matrix-handoff-review-haiku | 3/3 | 7/11 | 1/1 | 4/4 | 38/44 | 10/12 |
 | `oneshot` | matrix-oneshot-opus | 3/3 | 8/11 | 1/1 | 4/4 | 42/44 | 11/12 |
-| `skill` | matrix-skill | 2/3 | 8/11 | 1/1 | 4/4 | 39/44 | 8/12 |
+| `skill` | matrix-skill | 2/3 | 6/11 | 1/1 | 4/4 | 37/44 | 8/12 |
 | `handoff` | matrix-handoff-opus | 2/3 | 7/11 | 1/1 | 4/4 | 38/44 | 10/12 |
 | `handoff` | hard-handoff-sonnet | - | 2/2 | - | - | 7/7 | - |
 | `oneshot` | hard-oneshot-opus | - | 2/2 | - | - | 6/7 | - |
@@ -162,7 +161,7 @@ The gap between what the reviewer found and what the implementer landed is the c
 | `handoff-review` | matrix-handoff-review-sonnet | 64/76 | 1 | 58 | 91% |
 | `handoff-review` | matrix-handoff-review-haiku | 66/76 | 0 | 63 | 96% |
 | `oneshot` | matrix-oneshot-opus | 66/76 | 0 | 69 | 105% |
-| `skill` | matrix-skill | 60/76 | 0 | 62 | 103% |
+| `skill` | matrix-skill | 65/76 | 0 | 58 | 89% |
 | `handoff` | matrix-handoff-opus | 66/76 | 0 | 62 | 94% |
 | `handoff` | hard-handoff-sonnet | 10/10 | 0 | 9 | 90% |
 | `oneshot` | hard-oneshot-opus | 9/10 | 0 | 8 | 89% |
@@ -173,26 +172,26 @@ The gap between what the reviewer found and what the implementer landed is the c
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `handoff` | review | haiku | 22 | 21 | 18,655 | 293,296 | 333,877 | 352,532 | $0.204 | 54,204 (27%) |
 | `handoff` | fix | haiku | 53 | 52 | 24,072 | 2,695,948 | 2,753,879 | 2,777,951 | $0.505 | 71,202 (36%) |
-| `handoff` | verify | - | 9 | 8 | 22,724 | 322,959 | 394,731 | 417,455 | $1.447 | 81,878 (8%) |
+| `handoff` | verify | - | 6 | 5 | 10,287 | 223,895 | 280,118 | 290,405 | $0.700 | 66,331 (7%) |
 | `handoff` | review | opus | 11 | 10 | 53,927 | 454,160 | 538,617 | 592,544 | $2.420 | 94,555 (9%) |
 | `handoff` | fix | sonnet | 6 | 5 | 18,524 | 320,850 | 389,161 | 407,685 | $0.523 | 78,522 (8%) |
-| `handoff` | verify | - | 13 | 12 | 27,958 | 703,159 | 796,501 | 824,459 | $1.984 | 103,436 (10%) |
+| `handoff` | verify | - | 10 | 8 | 12,344 | 423,872 | 489,951 | 502,295 | $0.929 | 82,901 (8%) |
 | `handoff` | review | opus | 11 | 10 | 44,203 | 448,191 | 521,712 | 565,915 | $2.064 | 83,619 (8%) |
 | `handoff` | fix | haiku | 53 | 52 | 36,883 | 3,441,841 | 3,520,737 | 3,557,620 | $0.686 | 92,167 (46%) |
-| `handoff` | verify | - | 15 | 14 | 33,003 | 964,712 | 1,066,190 | 1,099,193 | $2.322 | 111,568 (11%) |
+| `handoff` | verify | - | 10 | 8 | 20,970 | 281,374 | 366,331 | 387,301 | $1.272 | 95,065 (10%) |
 | `handoff-review` | review | opus | 9 | 8 | 50,406 | 366,316 | 445,928 | 496,334 | $2.239 | 89,714 (9%) |
 | `handoff-review` | fix | sonnet | 7 | 6 | 26,364 | 414,605 | 492,766 | 519,130 | $0.659 | 88,370 (9%) |
-| `handoff-review` | verify | - | 17 | 16 | 32,620 | 715,484 | 814,281 | 846,901 | $2.161 | 108,893 (11%) |
+| `handoff-review` | verify | - | 10 | 9 | 14,619 | 427,252 | 490,919 | 505,538 | $0.887 | 73,769 (7%) |
 | `handoff-review` | review | opus | 14 | 13 | 55,801 | 697,568 | 787,182 | 842,983 | $2.640 | 99,706 (10%) |
 | `handoff-review` | fix | haiku | 45 | 40 | 29,442 | 2,671,762 | 2,744,047 | 2,773,489 | $0.590 | 87,812 (44%) |
-| `handoff-review` | verify | - | 14 | 13 | 25,789 | 786,135 | 877,222 | 903,011 | $1.949 | 101,179 (10%) |
+| `handoff-review` | verify | - | 8 | 7 | 9,628 | 378,611 | 435,369 | 444,997 | $0.722 | 66,860 (7%) |
 | `oneshot` | oneshot | opus | 21 | 20 | 54,229 | 1,351,093 | 1,436,515 | 1,490,744 | $2.885 | 95,500 (10%) |
-| `oneshot` | verify | - | 16 | 15 | 33,103 | 667,681 | 776,815 | 809,918 | $2.253 | 119,232 (12%) |
-| `skill` | skill | opus | 23 | 62 | 18,128 | 1,004,578 | 1,059,232 | 1,077,360 | $4.243 | 90,067 (9%) |
-| `skill` | verify | - | 14 | 13 | 27,202 | 802,470 | 893,289 | 920,491 | $1.989 | 100,911 (10%) |
+| `oneshot` | verify | - | 12 | 11 | 10,690 | 660,757 | 722,223 | 732,913 | $0.838 | 71,560 (7%) |
+| `skill` | skill | opus | 18 | 56 | 12,891 | 828,366 | 915,830 | 928,721 | $3.766 | 97,550 (10%) |
+| `skill` | verify | - | 10 | 9 | 10,716 | 344,263 | 421,848 | 432,564 | $0.904 | 87,691 (9%) |
 | `handoff` | review | opus | 16 | 15 | 61,406 | 992,014 | 1,086,726 | 1,148,132 | $2.978 | 104,800 (10%) |
 | `handoff` | fix | opus | 20 | 19 | 34,640 | 1,459,712 | 1,547,867 | 1,582,507 | $2.477 | 98,235 (10%) |
-| `handoff` | verify | - | 17 | 16 | 31,227 | 681,227 | 781,617 | 812,844 | $2.125 | 110,486 (11%) |
+| `handoff` | verify | - | 9 | 8 | 11,604 | 393,381 | 452,229 | 463,833 | $0.781 | 68,950 (7%) |
 | `handoff` | review | opus | 10 | 9 | 30,254 | 489,022 | 548,500 | 578,754 | $1.596 | 69,574 (7%) |
 | `handoff` | fix | sonnet | 5 | 4 | 7,667 | 193,599 | 237,626 | 245,293 | $0.291 | 54,240 (5%) |
 | `handoff` | verify | - | 6 | 5 | 14,534 | 204,409 | 256,942 | 271,476 | $0.991 | 62,641 (6%) |
@@ -240,10 +239,10 @@ WP-02 WP-03 BUG-02 SEC-02 SEC-03 SEC-27 BUG-04 BUG-05 SEC-35 SEC-38 SEC-39 JS-04
 WP-02 BUG-02 SEC-02 SEC-27 BUG-05 JS-04
 ```
 
-**`skill` / matrix-skill** — 13 still open:
+**`skill` / matrix-skill** — 17 still open:
 
 ```
-WP-02 WP-03 BUG-02 SEC-02 WP-04 SEC-27 BUG-05 SEC-38 SEC-39 SEC-40 A11Y-03 DEF-02 JS-04
+WP-01 WP-02 WP-03 DBG-01 SEC-02 SEC-03 TZ-01 SEC-10 SEC-27 BUG-05 BUG-07 SEC-35 SEC-37 A11Y-03 JS-02 JS-04 JS-05
 ```
 
 **`handoff` / matrix-handoff-opus** — 13 still open:
