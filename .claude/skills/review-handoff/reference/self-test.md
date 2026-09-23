@@ -43,6 +43,13 @@ Per arm, per phase:
   A model that deletes `WPEM_DB::search()` makes the SQL-injection detector pass; this
   check catches that.
 - **Regressions** — new defects the fix introduced, from the same verification pass.
+
+The verifier is meant to be blind to which model produced the fix. It sees only the
+patched plugin, `fix.diff`, and the findings list — never `REVIEW.md` or `PLAN.md`. That
+blinding is fragile: `fix.diff` is generated from inside the run directory specifically
+so its headers carry relative paths, because absolute ones put the run name, and with it
+the arm and the implementer model, into every hunk header. If you change how the diff is
+produced, check `grep -iE 'sonnet|haiku|opus' runs/<name>/fix.diff` comes back empty.
 - **Tokens** — input, output, cache reads and creation, billed separately.
 - **Cost** — `total_cost_usd` from the CLI result envelope.
 - **Peak context** — the largest window any single turn occupied, and what share of the

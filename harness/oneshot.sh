@@ -39,7 +39,11 @@ cp -R "$SANDBOX/plugin" "$RUN/plugin-fixed"
 for f in REVIEW.md IMPLEMENTATION.md; do
   [ -f "$SANDBOX/.review-handoff/$f" ] && cp "$SANDBOX/.review-handoff/$f" "$RUN/$f"
 done
-diff -ru "$RUN/plugin" "$RUN/plugin-fixed" > "$RUN/fix.diff" 2>/dev/null || true
+# Generate the diff from inside the run directory so the headers carry
+# relative paths. Absolute paths would put the run name - and therefore the
+# arm and the implementer model - into every hunk header, which the fix
+# verifier reads. The verifier is supposed to be blind to that.
+( cd "$RUN" && diff -ru plugin plugin-fixed > fix.diff 2>/dev/null ) || true
 
 echo "{ \"phase\": \"oneshot\", \"model\": \"$MODEL\", \"seconds\": $WALL }" > "$RUN/oneshot-meta.json"
 say "wrote plugin-fixed + fix.diff in ${WALL}s"

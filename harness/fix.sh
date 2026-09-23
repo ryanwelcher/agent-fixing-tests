@@ -33,7 +33,11 @@ run_agent fix "$MODEL" "$PROMPT" "$SANDBOX" "$RUN"
 rm -rf "$RUN/plugin-fixed"
 cp -R "$SANDBOX/plugin" "$RUN/plugin-fixed"
 [ -f "$SANDBOX/.review-handoff/IMPLEMENTATION.md" ] && cp "$SANDBOX/.review-handoff/IMPLEMENTATION.md" "$RUN/IMPLEMENTATION.md"
-diff -ru "$RUN/plugin" "$RUN/plugin-fixed" > "$RUN/fix.diff" 2>/dev/null || true
+# Generate the diff from inside the run directory so the headers carry
+# relative paths. Absolute paths would put the run name - and therefore the
+# arm and the implementer model - into every hunk header, which the fix
+# verifier reads. The verifier is supposed to be blind to that.
+( cd "$RUN" && diff -ru plugin plugin-fixed > fix.diff 2>/dev/null ) || true
 
 echo "{ \"phase\": \"fix\", \"model\": \"$MODEL\", \"seconds\": $WALL, \"with_review\": $WITH_REVIEW }" > "$RUN/fix-meta.json"
 say "wrote plugin-fixed + fix.diff in ${WALL}s"
