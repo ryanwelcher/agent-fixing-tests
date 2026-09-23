@@ -99,6 +99,31 @@ claims it did:
 - **Turns, tool calls, wall time.**
 - **Derived** — cost per issue fixed, tokens per issue fixed, and found→fixed conversion.
 
+## What 12 runs actually showed
+
+Recorded in `results/runs.jsonl`. Read these as one fixture's worth of evidence, not as
+general claims about models.
+
+**The detector overstates every time.** Of the fixes the regex checks passed, 6–13% did
+not survive a judge reading the code. That gap did not close with a better implementer.
+
+**Implementer capability barely moved the result.** Handed the same plan, Sonnet, Haiku
+and Opus landed on 56, 54 and 56 verified fixes. Across seven split runs and three
+implementers the whole spread is 53–57.
+
+**The nine-fix gap did not replicate.** One agent reviewing and fixing in a single
+context beat the two-agent split 65 to 56 on the first sample. On the second it was 54
+to 55 — gone, and reversed by one. The single-context arm swung eleven fixes between two
+identical runs while the split arm moved by one.
+
+**What replicated instead was consistency, and cost.** The split produced the same
+number of working fixes every time and cost roughly double, both samples. If you need a
+process you can run unattended, predictable matters more than a good average.
+
+**Nothing in the first three checks caught any of this.** Not the detectors, not
+`php -l`, not the 34-marker surface check. Only reading the code, and only running it
+twice.
+
 ## The data
 
 Every arm appends one row to `results/runs.jsonl` (append-only; the source of truth).

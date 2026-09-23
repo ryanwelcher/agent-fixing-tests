@@ -1,6 +1,6 @@
 # Two-model review handoff: results
 
-_Generated 2026-09-23 18:51 from 10 run(s) in `results/runs.jsonl` (13 superseded row(s) ignored)._
+_Generated 2026-09-23 19:28 from 12 run(s) in `results/runs.jsonl` (13 superseded row(s) ignored)._
 
 Fixture: `wp-event-manager`, a WordPress plugin with 76 deliberately seeded defects
 (22 critical, 32 high, 13 medium, 9 low). 75 are checked by deterministic regex detectors;
@@ -24,6 +24,8 @@ the defect is actually gone. Quote the verified number.
 | `handoff` | opus | opus | 62/75 | 56/75 | 75% | $5.455 | 2,730,639 | 18m33s | $0.097 | intact | pass |
 | `handoff` | opus | sonnet | 9/9 | 9/9 | 100% | $1.887 | 824,047 | 11m11s | $0.210 | - | pass |
 | `oneshot` | opus | opus | 8/9 | 8/9 | 89% | $1.739 | 776,638 | 9m09s | $0.217 | - | pass |
+| `handoff` | opus | opus | 60/75 | 55/75 | 73% | $3.182 | 1,179,258 | 13m17s | $0.058 | intact | pass |
+| `oneshot` | opus | opus | 59/75 | 54/75 | 72% | $1.869 | 1,086,286 | 9m20s | $0.035 | intact | pass |
 
 ## Fix quality
 
@@ -41,6 +43,8 @@ Of the fixes the detectors passed, how many survive reading the code.
 | `handoff` | opus | 56 | 5 | 1 | 0 | 6 | 10% |
 | `handoff` | sonnet | 9 | 0 | 0 | 0 | 6 | 0% |
 | `oneshot` | opus | 8 | 0 | 0 | 0 | 5 | 0% |
+| `handoff` | opus | 55 | 4 | 1 | 0 | 4 | 8% |
+| `oneshot` | opus | 54 | 5 | 0 | 0 | 5 | 8% |
 
 ### Regressions the fix introduced
 
@@ -118,6 +122,15 @@ Of the fixes the detectors passed, how many survive reading the code.
 - `oneshot` — **low** `includes/class-mdir-db.php:141` — `return (int) $wpdb->query( $wpdb->prepare( $sql, $args ) );` collapses a SQL failure (false) and a legitimate refusal into the same 0, so book_seat() reports 'You already have a seat at this event.' (HTTP 409) when the insert actually errored.
 - `oneshot` — **low** `includes/class-mdir-db.php:118` — Public signature changed to `add_booking( $event_id, $user_id, $capacity = null )` and the return value changed from $wpdb->insert()'s result to a row count; with the default null the new `WHERE NOT EXISTS (...)` duplicate guard still applies, so any existing two-arg caller that relied on inserting a repeat booking now silently gets 0.
 - `oneshot` — **low** `includes/class-mdir-booking.php:57` — New error code `new WP_Error( 'mdir_booked', ... )` - code that branched only on 'mdir_full' will fall through, and the 'This event is full.' message is now also returned whenever mdir_capacity is unset or 0 via the `if ( $capacity < 1 )` short-circuit at line 48 without ever touching the bookings table.
+- `handoff` — **medium** `includes/class-event-cron.php:25` — cleanup() now takes only the first 200 published events in default post_date order ('posts_per_page' => 200) with no ordering by event date; on sites with more than 200 dated events, past events outside that window are never cleaned up. fields=>ids also skips meta priming, so each event triggers its own get_post_meta query.
+- `handoff` — **low** `includes/class-event-ajax.php:11` — wp_ajax_nopriv_wpem_search was removed and search() now requires manage_options, but wpem_frontend_assets() still sends a search nonce to every visitor and frontend.js still binds #wpem-search. Public attendee search now fails for everyone except admins (intended for PII, but a user-visible change).
+- `handoff` — **low** `includes/class-event-rest.php:18` — GET /wpem/v1/events used to return every event. It now silently caps at 'per_page' default 100, and 'no_found_rows' => true means callers get no total, so existing clients see truncated lists.
+- `handoff` — **low** `includes/functions.php:66` — wpem_sanitize_settings() replaces a blank or invalid notify_email with get_option('admin_email'), so admins can no longer turn off RSVP notification emails by clearing the field.
+- `oneshot` — **medium** `plugin/public/js/frontend.js:21` — Front-end attendee search is now broken for visitors: wp_ajax_nopriv_wpem_search was removed and search() returns wp_die('-1',403) unless manage_options, yet frontend.js still calls action 'wpem_search' and writes the '-1' response into #wpem-results via innerHTML.
+- `oneshot` — **medium** `plugin/includes/class-event-rest.php:24` — GET /wpem/v1/events used to return all events. It now silently returns at most 100 ('per_page' default 100, maximum 100) with 'no_found_rows' => true, so there is no X-WP-Total/X-WP-TotalPages and clients can't tell the list was truncated.
+- `oneshot` — **low** `plugin/includes/class-event-ajax.php:22` — Failed RSVPs now get wp_send_json( array('success'=>false), 400 ). jQuery routes that to the error path, and frontend.js has no error handler, so the user sees no feedback.
+- `oneshot` — **low** `plugin/wp-event-manager.php:73` — The legacy-table migration renames the shared unprefixed 'wpem_rsvps' only when is_main_site(). On multisite all existing RSVPs from every subsite end up in the main site's table, and subsites start empty.
+- `oneshot` — **low** `plugin/includes/class-event-admin.php:89` — Export now requires a POST nonce (check_admin_referer('wpem_export')). Existing export links or bookmarks (admin-post.php?action=wpem_export&event_id=N) now fail with 'link expired'. This is intended, but users will notice.
 
 ## Fix rate by severity
 
@@ -133,6 +146,8 @@ Of the fixes the detectors passed, how many survive reading the code.
 | `handoff` | matrix-handoff-opus | 19/21 | 28/32 | 8/13 | 7/9 |
 | `handoff` | hard-handoff-sonnet | 3/3 | 5/5 | 1/1 | - |
 | `oneshot` | hard-oneshot-opus | 3/3 | 4/5 | 1/1 | - |
+| `handoff` | repeat-handoff-opus | 20/21 | 27/32 | 8/13 | 5/9 |
+| `oneshot` | repeat-oneshot-opus | 18/21 | 27/32 | 9/13 | 5/9 |
 
 ## Fix rate by category
 
@@ -148,6 +163,8 @@ Of the fixes the detectors passed, how many survive reading the code.
 | `handoff` | matrix-handoff-opus | 2/3 | 7/11 | 1/1 | 4/4 | 38/44 | 10/12 |
 | `handoff` | hard-handoff-sonnet | - | 2/2 | - | - | 7/7 | - |
 | `oneshot` | hard-oneshot-opus | - | 2/2 | - | - | 6/7 | - |
+| `handoff` | repeat-handoff-opus | 2/3 | 7/11 | 1/1 | 4/4 | 38/44 | 8/12 |
+| `oneshot` | repeat-oneshot-opus | 2/3 | 7/11 | 1/1 | 4/4 | 37/44 | 8/12 |
 
 ## Review recall vs. fixes landed
 
@@ -165,6 +182,8 @@ The gap between what the reviewer found and what the implementer landed is the c
 | `handoff` | matrix-handoff-opus | 66/76 | 0 | 62 | 94% |
 | `handoff` | hard-handoff-sonnet | 10/10 | 0 | 9 | 90% |
 | `oneshot` | hard-oneshot-opus | 9/10 | 0 | 8 | 89% |
+| `handoff` | repeat-handoff-opus | 65/76 | 0 | 60 | 92% |
+| `oneshot` | repeat-oneshot-opus | 67/76 | 0 | 59 | 88% |
 
 ## Tokens and context, per phase
 
@@ -197,6 +216,11 @@ The gap between what the reviewer found and what the implementer landed is the c
 | `handoff` | verify | - | 6 | 5 | 14,534 | 204,409 | 256,942 | 271,476 | $0.991 | 62,641 (6%) |
 | `oneshot` | oneshot | opus | 14 | 13 | 31,511 | 684,221 | 745,127 | 776,638 | $1.739 | 70,998 (7%) |
 | `oneshot` | verify | - | 8 | 7 | 15,487 | 313,506 | 369,595 | 385,082 | $1.105 | 66,193 (7%) |
+| `handoff` | review | opus | 9 | 8 | 54,659 | 455,188 | 543,479 | 598,138 | $1.890 | 98,393 (10%) |
+| `handoff` | fix | opus | 21 | 20 | 29,041 | 475,104 | 552,079 | 581,120 | $1.292 | 87,079 (9%) |
+| `handoff` | verify | - | 10 | 9 | 13,715 | 351,078 | 425,667 | 439,382 | $0.941 | 84,695 (8%) |
+| `oneshot` | oneshot | opus | 26 | 25 | 49,871 | 951,246 | 1,036,415 | 1,086,286 | $1.869 | 95,257 (10%) |
+| `oneshot` | verify | - | 8 | 7 | 14,483 | 267,862 | 342,459 | 356,942 | $0.940 | 84,705 (8%) |
 
 ## Where the handoff leaked
 
@@ -261,6 +285,18 @@ WP-02 WP-03 BUG-02 SEC-02 SEC-03 SEC-04 SEC-27 SEC-31 BUG-04 BUG-05 SEC-38 A11Y-
 
 ```
 H-07
+```
+
+**`handoff` / repeat-handoff-opus** — 15 still open:
+
+```
+WP-01 WP-02 WP-03 DBG-01 SEC-02 SEC-05 TZ-01 SEC-27 BUG-05 BUG-07 SEC-35 SEC-37 A11Y-03 JS-02 JS-04
+```
+
+**`oneshot` / repeat-oneshot-opus** — 16 still open:
+
+```
+WP-02 WP-03 BUG-02 DBG-01 SEC-02 SEC-03 SEC-10 SEC-27 BUG-05 BUG-07 SEC-35 SEC-37 A11Y-03 JS-02 JS-03 JS-04
 ```
 
 ## Raw data
